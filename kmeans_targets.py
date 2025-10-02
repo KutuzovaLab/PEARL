@@ -78,11 +78,12 @@ suspects = import_suspects(suspect_path)
 name_counts = suspects['name'].value_counts().reset_index()
 name_counts.columns = ['name', 'count']
 name_counts = name_counts.sort_values(by='count', ascending=False)
-name_counts = name_counts[name_counts['count']>1]
+name_counts = name_counts[name_counts['count']==1]
 
 
 # I will look into one target now and get all the info on all ions
 
+target = ['Benzimidazole']
 target = ['Khellin',  'Benzimidazole', 'RIBOFLAVIN', 'TRYPTOPHAN', 'Homocystine', 'Genistein']
 susp_sel = suspects[suspects['name'].isin(target)].reset_index(drop = True)
 print(susp_sel)
@@ -127,7 +128,7 @@ for i in range(len(ms2_names)):
     results.append({'MS2_image': ms2_names[i], 'Cluster': int(kmeans.labels_[i]), 'MS1_centroid': ms1_names[kmeans.labels_[i]]})
 
 results = pd.DataFrame(results)
-results.to_csv('/home/frz603/DSP/matrix_images/clustering/Khellin_clusters.csv', index=False)
+results.to_csv('/home/frz603/DSP/matrix_images/clustering/clusters.csv', index=False)
 
 # Looking into distance between center and assigned images
 
@@ -136,12 +137,22 @@ labels = kmeans.labels_
 distances = np.linalg.norm(ms2_labels - centroids[labels], axis=1)
 
 dist_centr = pd.DataFrame({'ms2_image': ms2_names, 'dist': distances, 'centroid': ms1_names[labels]})
-closest_images = dist_centr.sort_values(by='dist').head(60).reset_index(drop=True)
+closest_images = dist_centr.sort_values(by=['centroid', 'dist'])
 
 # Moving closest images so I can visually inspect them
 
-output_folder = f'/home/frz603/DSP/matrix_images/clustering/{target}'
+output_folder = f'/home/frz603/DSP/matrix_images/clustering/MS2'
 os.makedirs(output_folder, exist_ok=True)
+
+for i in range(1,len(np.unique(closest_images['centroid']))):
+    ms2_image_moved = np.array(closest_images[closest_images['centroid']==np.unique(closest_images['centroid'])[i]]['ms2_image'][0:20])
+    target_path = os.path.join(output_folder, re.sub('.png', '', np.unique(closest_images['centroid'])[i]))
+    os.makedirs(target_path, exist_ok=True)
+    for k in range(len(ms2_image_moved)):
+        shutil.copy(os.path.join(images_path, ms2_image_moved[k]), os.path.join(target_path, ms2_image_moved[k]))
+
+
+
 
 for i in range(len(closest_images)):
     img = np.array(Image.open(os.path.join(images_path, closest_images.loc[i,'ms2_image'])))
@@ -175,7 +186,59 @@ plt.savefig('/home/frz603/DSP/matrix_images/clustering/centroids.png')
 
 # Checking with the expected MS2 results
 
-ms2_exp = np.unique(np.round(noise_thres(susp_sel, 0.1),1))
+# First I'm moving MS1 image to a new folder called by the name of the suspect
+
+output_folder = '/home/frz603/DSP/matrix_images/clustering'
+os.makedirs(os.path.join(output_folder, target[0]), exist_ok=True)
+
+img = np.array(Image.open(os.path.join(images_path, MS1_sel[0])))
+img = Image.fromarray(np.where(img == 1, 255, 0).astype(np.uint8))
+img.save(os.path.join(output_folder, target[0], MS1_sel[0]))
 
 
-target_path = 'C:\Users\frz603\Documents\DSP\Matrix_Secondary_metabolites_2021'
+# Then I'm moving MS2 images that are the highest 
+
+ms2_exp = np.unique(np.round(noise_thres(susp_sel, 0.00001),1))
+
+# Just plotting full MS2 to check the variability in intensities
+
+row = susp_sel.iloc[0]
+mz_values = row['mz_list']
+int_values = row['int_list']
+
+plt.figure(figsize=(10, 6))
+plt.vlines(mz_values, ymin=0, ymax=int_values, color='blue')
+plt.xlabel('m/z')
+plt.ylabel('Intensity')
+plt.title(f"Spectrum for RT={row['RT']}, m/z={row['mz']}")
+plt.grid(True)
+plt.savefig(os.path.join(output_folder, target[0], 'MS2.png'))
+
+# Now I'm moving all labels of MS2 that are in MsDial into the same folder to be able to visually inspect them
+
+images_ms2 = []
+
+for i in range(len(ms2_exp)):
+    mass = ms2_exp[i]
+    images_ms2.extend([f for f in unet_labels if f.split('_')[1]=='MS2' and float(f.split('_')[2]+'.'+f.split('_')[3])<=mass and mass<=float(f.split('_')[4]+'.'+re.sub('.png', '', f).split('_')[5])])
+
+for i in range(len(images_ms2)):
+    img = np.array(Image.open(os.path.join(images_path, images_ms2[i])))
+    img = Image.fromarray(np.where(img == 1, 255, 0).astype(np.uint8))
+    img.save(os.path.join(output_folder, target[0], images_ms2[i]))
+
+
+# I'm looking into all ms2 signals to check the range
+
+mz_list = []
+int_list = []
+
+for i in range(len(suspects)):
+    mz_list.extend(suspects.loc[i, 'mz_list'])
+    int_list.extend(suspects.loc[i, 'int_list'])
+
+ms2_spectra = pd.DataFrame({'mz': mz_list, 'int': int_list})
+ms2_spectra = ms2_spectra[ms2_spectra['int']>=1000]
+
+min(mz_list)
+max(ms2_spectra['mz'])
