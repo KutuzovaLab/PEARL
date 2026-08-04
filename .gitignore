@@ -23,6 +23,7 @@ env/
 .numba_cache/
 
 # Data / outputs (uncomment or adjust as needed)
-# *.npy
-# *.png
-# *.xlsx
+*.mzml
+*.npy
+*.png
+*.xlsx
