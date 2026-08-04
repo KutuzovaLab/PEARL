@@ -1,0 +1,6 @@
+folder: "/home/frz603/DSP/yucca_runs/test_01/results/Task020_standardsnpy/Task019_simFinal/UNet__2D/YuccaManager__YuccaPlanner/default/kfold_5_fold_0/version_0/best"
+images_raw: "/home/frz603/DSP/yucca_runs/test_01/raw_data/Task020_standardsnpy/imagesTs"
+clustering_folder_base: "/home/frz603/DSP/matrix_standards/raw_images/clustering/labels_20"
+
+sample_thres: 3
+label_width: 6

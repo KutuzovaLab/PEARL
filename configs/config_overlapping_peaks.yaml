@@ -1,0 +1,11 @@
+rt_range: [100, 1200]
+peak_length: 30
+rt_bin_size: 0.6
+n_samples: 25
+n_images: 10
+rt_overlap_min: 7
+rt_overlap_max: 20
+
+image_path: "/home/frz603/DSP/simulated_data_02/overlapping_peaks/images"
+label_path: "/home/frz603/DSP/simulated_data_02/overlapping_peaks/labels"
+check_path: "/home/frz603/DSP/simulated_data_02/overlapping_peaks/check"

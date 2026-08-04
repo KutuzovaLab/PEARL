@@ -1,0 +1,4 @@
+path_ms_files: "/home/frz603/DSP/matrix_standards/raw_images/clustering/labels_20/sn3_w6/single_labels_overlap"
+binary: false
+k: 5
+output_folder: "/home/frz603/DSP/matrix_standards/raw_images/clustering/kdtree/sn3_w6_k5"

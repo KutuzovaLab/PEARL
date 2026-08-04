@@ -1,0 +1,10 @@
+suspect_path: "/home/frz603/DSP/matrix_standards/Standards_NEG.xlsx"
+mzml_path: "/home/frz603/MCR/Standards_Matrix_2021/Negative mzml"
+output_folder: "/home/frz603/DSP/matrix_standards/Negative/for_yucca/test_dir"
+
+rt_range: [100, 1100]
+rt_bin_size: 0.73
+mz_range: [50, 1000]
+mass_tol: 0.1
+length_spline: 5
+int_thres: 1000

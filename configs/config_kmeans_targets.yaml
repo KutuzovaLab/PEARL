@@ -1,0 +1,13 @@
+suspect_path: "/home/frz603/DSP/matrix_files/DK_2021_Secondary metabolites_POS.csv"
+images_path: "/home/frz603/DSP/yucca_runs/test_01/results/Task007_allMatrix/Task003_simOver/UNet__2D/YuccaManager__YuccaPlanner/default/kfold_5_fold_0/version_0/best"
+output_folder: "/home/frz603/DSP/matrix_images/clustering"
+
+target:
+  - "Khellin"
+  - "Benzimidazole"
+  - "RIBOFLAVIN"
+  - "TRYPTOPHAN"
+  - "Homocystine"
+  - "Genistein"
+
+noise_threshold: 0.00001

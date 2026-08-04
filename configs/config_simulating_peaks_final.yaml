@@ -1,0 +1,9 @@
+n_samples: 100
+n_images: 10000
+n_blobs_max: 5
+
+rt_range: [100, 1200]
+rt_bin_size: 0.6
+peak_length: 30
+
+output_folder: "/home/frz603/DSP/simulated_data_01"

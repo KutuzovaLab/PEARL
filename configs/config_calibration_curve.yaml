@@ -1,0 +1,13 @@
+image_path: "/home/frz603/DSP/yucca_runs/test_01/raw_data/Task002_suspMatrix/imagesTs"
+clipped_path: "/home/frz603/DSP/matrix_peaks/clipped/Task003_simOver"
+task_name: "suspMatrix"
+pred_path: "/home/frz603/DSP/yucca_runs/test_01/results/Task002_suspMatrix/Task003_simOver/UNet__2D/YuccaManager__YuccaPlanner/default/kfold_5_fold_0/version_0/best"
+label_path: "/home/frz603/DSP/matrix_peaks/overlay/Task003_simOver"
+suspect_path: "/home/frz603/DSP/matrix_files/DK_2021_Secondary metabolites_POS.csv"
+mzml_path: "/home/frz603/DSP/matrix_files"
+selected_samples_path: "/home/frz603/DSP/matrix_files/selected_samples.xlsx"
+results_folder: "/home/frz603/DSP/matrix_peaks"
+
+rt_range: [100, 1200]
+rt_bin_size: 0.8
+rt_sd: 20
