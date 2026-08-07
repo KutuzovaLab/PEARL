@@ -1,14 +1,15 @@
 import os
 import pandas as pd
 import os
-from PIL import Image
 import numpy as np
 from sklearn.neighbors import KDTree
 from tqdm import tqdm
+import pickle
 
-
-
-path_ms_files = "/home/frz603/DSP/matrix_standards/raw_images/clustering/labels_20/sn3_w6/single_labels_overlap"
+task_name = 'Task024_suspFinal'
+version = 'sim14/L3_erosion'
+folder = f"/maps/projects/zcr545_shared_datasets/data/projects/DL_LC/DSP_backup/final results/{task_name}/clustering/{version}"
+path_ms_files = os.path.join(folder, "single_labels_overlap")
 
 # === List all PNG files ===
 all_files = [f for f in os.listdir(path_ms_files) if f.endswith(".npy")]
@@ -20,6 +21,24 @@ ms2_files = [f for f in all_files if "MS2_" in f]
 # === Print summary ===
 print(f"Found {len(ms1_files)} MS1 files")
 print(f"Found {len(ms2_files)} MS2 files")
+
+
+# === Removing images that are all 0 for some reason ===
+
+#deleted = []
+
+#for fname in sorted(os.listdir(path_ms_files)):
+
+    #fpath = os.path.join(path_ms_files, fname)
+    #arr = np.load(fpath)
+
+    #if np.all(arr == 0):
+        #print(fname)
+        #os.remove(fpath)
+        #deleted.append(fname)
+
+#print(f"Deleted {len(deleted)} all-zero .npy files")
+
 
 # === Selecting subset to make computation faster ===
 
@@ -90,10 +109,10 @@ ms2_vectors, ms2_names = extract_embeddings(ms2_files, path_ms_files)
 print("All images embedded!")
 
 # === Setting parameters ===
-K = 5
+K = 30
 
 # === Saving results ===
-output_folder = f'/home/frz603/DSP/matrix_standards/raw_images/clustering/kdtree/sn3_w6_k{K}'
+output_folder = os.path.join(folder, 'clusters_k'+ str(K))
 os.makedirs(output_folder, exist_ok=True)
 np.save(os.path.join(output_folder,'ms1_vectors.npz'), ms1_vectors)
 np.save(os.path.join(output_folder,'ms1_names.npz'), np.array(ms1_names))
@@ -104,8 +123,13 @@ np.save(os.path.join(output_folder,'ms2_names.npz'), np.array(ms2_names))
 # === Nearest neighbor search ===
 tree = KDTree(ms1_vectors)
 
-print("Tree built!")
+tree_path = os.path.join(output_folder, "ms1_kdtree.pkl")
+with open(tree_path, "wb") as f:
+    pickle.dump(tree, f)
 
+print(f"Tree saved to: {tree_path}")
+
+# Querying MS1 tree with MS2
 dists, indices = tree.query(ms2_vectors, k=K)
 
 #ms2_to_ms1 = pd.DataFrame([(ms2_names[i], ms1_names[indices[i][0]], dists[i][0]) for i in range(len(ms2_names))])
@@ -114,7 +138,8 @@ ms2_to_ms1 = pd.DataFrame([
     for i in range(len(ms2_names))
     for j in range(K)
 ], columns=["ms2_name", "ms1_name", "distance"])
-ms2_to_ms1.to_excel(os.path.join(output_folder, 'final_matches.xlsx'))
+
+ms2_to_ms1.to_csv(os.path.join(output_folder, 'final_matches.csv'), index=False)
 
 print("Matches found and saved!")
 
