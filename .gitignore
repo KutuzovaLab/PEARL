@@ -27,3 +27,6 @@ env/
 *.npy
 *.png
 *.xlsx
+
+data
+.venv_yucca/

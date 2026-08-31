@@ -1,5 +1,5 @@
 """
-Usage:  python mzml_to_npy.py --config configs/config_mzml_to_npy.yaml
+Usage:  python -m src.mzml_to_npy_run --config data/configs/config_mzml_to_npy.yaml
 """
 
 import os

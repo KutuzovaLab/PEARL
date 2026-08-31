@@ -1,21 +1,20 @@
+"""
+    python -m src.matching_MS1_MS2 --config data/configs/config_matching_MS1_MS2.yaml
+"""
+
 import os
+import pickle
+
 import numpy as np
+import pandas as pd
+from sklearn.neighbors import KDTree
 from tqdm import tqdm
 
-def list_ms_files(path_ms_files):
-    """Return (ms1_files, ms2_files) lists of .npy files in a folder."""
-    all_files = [f for f in os.listdir(path_ms_files) if f.endswith(".npy")]
-    ms1_files = [f for f in all_files if "MS1_" in f]
-    ms2_files = [f for f in all_files if "MS2_" in f]
-    print(f"Found {len(ms1_files)} MS1 files")
-    print(f"Found {len(ms2_files)} MS2 files")
-    return ms1_files, ms2_files
+from src.config import parse_config_arg
 
 
 def image_projection_embedding(img_path, binary=False):
-    """Embed an image as concatenated, max-normalised row and column sums."""
     arr = np.load(img_path)
-
     if binary:
         arr = (arr > 128).astype(int)
 
@@ -27,20 +26,64 @@ def image_projection_embedding(img_path, binary=False):
     max_val = vec.max()
     if max_val > 0:
         vec = vec / max_val
-
     return vec
 
 
 def extract_embeddings(file_list, folder, binary=False):
-    """Embed every file in ``file_list``; returns (embeddings, valid_names)."""
     embeddings = []
     valid_names = []
     for fname in tqdm(file_list):
         try:
-            path = os.path.join(folder, fname)
-            vec = image_projection_embedding(path, binary=binary)
+            vec = image_projection_embedding(os.path.join(folder, fname), binary=binary)
             embeddings.append(vec)
             valid_names.append(fname)
         except Exception as e:
             print(f"Error processing {fname}: {e}")
     return np.array(embeddings), valid_names
+
+
+def main(cfg):
+    input_dir = cfg["input_dir"]
+    binary = cfg.get("binary", False)
+    K = cfg.get("k", 30)
+    output_dir = cfg.get(
+        "output_dir",
+        os.path.join(os.path.dirname(os.path.normpath(input_dir)), f"clusters_k{K}"),
+    )
+
+    all_files = [f for f in os.listdir(input_dir) if f.endswith(".npy")]
+    ms1_files = [f for f in all_files if "MS1_" in f]
+    ms2_files = [f for f in all_files if "MS2_" in f]
+    print(f"Found {len(ms1_files)} MS1 files")
+    print(f"Found {len(ms2_files)} MS2 files")
+
+    ms1_vectors, ms1_names = extract_embeddings(ms1_files, input_dir, binary=binary)
+    ms2_vectors, ms2_names = extract_embeddings(ms2_files, input_dir, binary=binary)
+    print("All images embedded!")
+
+    os.makedirs(output_dir, exist_ok=True)
+    np.save(os.path.join(output_dir, "ms1_vectors.npz"), ms1_vectors)
+    np.save(os.path.join(output_dir, "ms1_names.npz"), np.array(ms1_names))
+    np.save(os.path.join(output_dir, "ms2_vectors.npz"), ms2_vectors)
+    np.save(os.path.join(output_dir, "ms2_names.npz"), np.array(ms2_names))
+
+    # nearest-neighbour search
+    tree = KDTree(ms1_vectors)
+    tree_path = os.path.join(output_dir, "ms1_kdtree.pkl")
+    with open(tree_path, "wb") as f:
+        pickle.dump(tree, f)
+    print(f"Tree saved to: {tree_path}")
+
+    dists, indices = tree.query(ms2_vectors, k=K)
+    ms2_to_ms1 = pd.DataFrame([
+        (ms2_names[i], ms1_names[indices[i][j]], dists[i][j])
+        for i in range(len(ms2_names))
+        for j in range(K)
+    ], columns=["ms2_name", "ms1_name", "distance"])
+
+    ms2_to_ms1.to_csv(os.path.join(output_dir, "final_matches.csv"), index=False)
+    print("Matches found and saved!")
+
+
+if __name__ == "__main__":
+    main(parse_config_arg(description="Match MS2 label images to nearest MS1 via KDTree."))

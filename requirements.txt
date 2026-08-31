@@ -11,3 +11,4 @@ pyopenms
 numba
 PyYAML
 openpyxl
+yucca==2.3.7
