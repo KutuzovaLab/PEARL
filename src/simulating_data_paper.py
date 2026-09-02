@@ -1,10 +1,8 @@
 import numpy as np
-from scipy.stats import exponnorm
 from scipy.special import log_ndtr
-import matplotlib.pyplot as plt
 import random
 import os
-from src.config import parse_config_arg
+from src.common import parse_config_arg
 
 def make_peak(rt_range_shifted, max_int, p_noise, sigma, tau):
 
@@ -117,7 +115,6 @@ def create_resolved_peak(n_max, max_bins_shift, max_intensity_range, int_sd, n_s
 
     return image, label_1, label_2, label_3
 
-
 def add_background_noise(int_mean, int_sd, image):
     mask = image == 0
     image[mask] = np.random.normal(loc=int_mean, scale=int_sd, size=int(mask.sum()))
@@ -189,7 +186,6 @@ def generate_dataset(cfg):
             all_labels = {"v1": label_1, "v2": label_2, "v3": label_3}
             for v in label_versions:
                 np.save(os.path.join(lbl_dirs[v], img_name), all_labels[v])
-
 
 if __name__ == "__main__":
     config = parse_config_arg(description="Generate synthetic LC-MS training images from a YAML config.")

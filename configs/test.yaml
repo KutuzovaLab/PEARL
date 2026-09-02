@@ -1,0 +1,121 @@
+
+#   ./run_pipeline.sh test          (no env vars; expect well under 10 minutes)
+# Uses data/mzml/standards and data/reference/Standards_NEG.xlsx.
+
+task: Task900_test
+synthetic_config: configs/test.yaml
+synthetic_section: synthetic
+synthetic_task: Task901_testSynth
+epochs: 2
+patch: 64 64
+batch: 8
+
+synthetic:
+  seed: 0
+  n_samples: 8
+  rt_bins: 1400
+  start_index: 90001
+  labels:
+  - v1
+  - v2
+  - v3
+  background:
+    mean: 500
+    sd: 200
+  out_dir: ./results/test_synthetic
+  subsets:
+  - name: resolved_high_low
+    n_images: 20
+    groups:
+    - intensity:
+      - 18000
+      - 20000
+      int_sd: 10000
+      n_max: 3
+      occurrence:
+      - 0.05
+      - 1.0
+      noise_range:
+      - 0.01
+      - 0.05
+    - intensity:
+      - 2000
+      - 5000
+      int_sd: 500
+      n_max: 20
+      occurrence:
+      - 0.05
+      - 1.0
+      noise_range:
+      - 0.05
+      - 0.3
+  - name: sparse_high_low
+    n_images: 10
+    groups:
+    - intensity:
+      - 18000
+      - 20000
+      int_sd: 10000
+      n_max: 1
+      occurrence:
+      - 0.01
+      - 0.05
+      noise_range:
+      - 0.01
+      - 0.05
+images:
+  acquisition: dia
+  suspect_path: data/reference/Standards_NEG.xlsx
+  mzml_path: data/mzml/standards
+  output_folder: results/eic/test
+  rt_range:
+  - 100
+  - 1100
+  rt_bin_size: 0.73
+  mz_range:
+  - 265
+  - 290
+  mass_tol: 0.1
+  length_spline: 5
+  int_thres: 1000
+labels:
+  predictions_dir: results/yucca/results/Task900_test/Task901_testSynth/UNet__2D/YuccaManager__YuccaPlanner/default/kfold_5_fold_0/version_0/best
+  images_raw: results/yucca/raw_data/Task900_test/imagesTs
+  output_dir: results/clustering/test/L3_erosion
+  task_name: test
+  erosion_width: 3
+  filters:
+    labels: []
+matching:
+  input_dir: results/clustering/test/L3_erosion/single_labels_overlap
+  output_dir: results/clustering/test/L3_erosion/clusters_k30
+  k: 30
+  binary: false
+  filters:
+    links: []
+validation:
+  branch: standneg
+  results_path: data/reference/Standards_NEG.xlsx
+  suspect_list_path: null
+  suspect_list_sheet: SSList_NEG
+  fill_min: 0.7
+  qc_mzml: data/mzml/standards/230503_Batch2_13.mzML
+  rt_range:
+  - 100
+  - 1100
+  rt_bin_size: 0.73
+  mz_window:
+  - 265
+  - 290
+  single_labels_dir: results/clustering/test/L3_erosion/single_labels_overlap
+  clusters_path: results/clustering/test/L3_erosion/clusters_k30/final_matches.csv
+  dda_path: null
+  mona_library: data/libraries/mona_library.pkl
+  library_tol: 0.1
+  library_instrument: QTOF|Q-TOF
+  output_dir: results/test
+  task_name: test
+  cosine_tol: 0.5
+  dda_tol: 0.1
+  sirius:
+    enabled: false

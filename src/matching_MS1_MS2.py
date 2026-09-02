@@ -1,5 +1,5 @@
 """
-    python -m src.matching_MS1_MS2 --config data/configs/config_matching_MS1_MS2.yaml
+    python -m src.matching_MS1_MS2 --config configs/config_matching_MS1_MS2.yaml
 """
 
 import os
@@ -10,8 +10,8 @@ import pandas as pd
 from sklearn.neighbors import KDTree
 from tqdm import tqdm
 
-from src.config import parse_config_arg
-
+from src.common import parse_config_arg
+from src.filters import apply_link_filters
 
 def image_projection_embedding(img_path, binary=False):
     arr = np.load(img_path)
@@ -28,7 +28,6 @@ def image_projection_embedding(img_path, binary=False):
         vec = vec / max_val
     return vec
 
-
 def extract_embeddings(file_list, folder, binary=False):
     embeddings = []
     valid_names = []
@@ -40,7 +39,6 @@ def extract_embeddings(file_list, folder, binary=False):
         except Exception as e:
             print(f"Error processing {fname}: {e}")
     return np.array(embeddings), valid_names
-
 
 def main(cfg):
     input_dir = cfg["input_dir"]
@@ -57,9 +55,20 @@ def main(cfg):
     print(f"Found {len(ms1_files)} MS1 files")
     print(f"Found {len(ms2_files)} MS2 files")
 
+    if not ms1_files:
+        raise SystemExit(f"no MS1 label images in {input_dir}; nothing to match against")
+    if not ms2_files:
+        raise SystemExit(f"no MS2 label images in {input_dir}; nothing to match")
+
     ms1_vectors, ms1_names = extract_embeddings(ms1_files, input_dir, binary=binary)
     ms2_vectors, ms2_names = extract_embeddings(ms2_files, input_dir, binary=binary)
     print("All images embedded!")
+
+    # KDTree.query raises if k exceeds the number of points in the tree, which
+    # happens on small runs where k is left at the production default of 30.
+    if K > len(ms1_names):
+        print(f"k={K} exceeds the {len(ms1_names)} MS1 labels available; clamping k to {len(ms1_names)}")
+        K = len(ms1_names)
 
     os.makedirs(output_dir, exist_ok=True)
     np.save(os.path.join(output_dir, "ms1_vectors.npz"), ms1_vectors)
@@ -81,9 +90,11 @@ def main(cfg):
         for j in range(K)
     ], columns=["ms2_name", "ms1_name", "distance"])
 
+    # Stage 4, link side. No-op unless cfg["filters"]["links"] is set - see src/filters.py.
+    ms2_to_ms1 = apply_link_filters(ms2_to_ms1, cfg)
+
     ms2_to_ms1.to_csv(os.path.join(output_dir, "final_matches.csv"), index=False)
     print("Matches found and saved!")
-
 
 if __name__ == "__main__":
     main(parse_config_arg(description="Match MS2 label images to nearest MS1 via KDTree."))

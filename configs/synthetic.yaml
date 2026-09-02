@@ -1,0 +1,166 @@
+#   python -m src.simulating_data_paper --config configs/synthetic.yaml --section base
+
+base:
+  seed: 0
+  n_samples: 100
+  rt_bins: 3500
+  start_index: 70001
+  labels:
+  - v1
+  - v2
+  - v3
+  background:
+    mean: 500
+    sd: 200
+  out_dir: ./results/synthetic
+  subsets:
+  - name: resolved_high_low
+    n_images: 20000
+    groups:
+    - intensity:
+      - 18000
+      - 20000
+      int_sd: 10000
+      n_max: 3
+      occurrence:
+      - 0.05
+      - 1.0
+      noise_range:
+      - 0.01
+      - 0.05
+    - intensity:
+      - 2000
+      - 5000
+      int_sd: 500
+      n_max: 20
+      occurrence:
+      - 0.05
+      - 1.0
+      noise_range:
+      - 0.05
+      - 0.3
+  - name: resolved_low
+    n_images: 30000
+    groups:
+    - intensity:
+      - 2000
+      - 5000
+      int_sd: 500
+      n_max: 30
+      occurrence:
+      - 0.05
+      - 1.0
+      noise_range:
+      - 0.05
+      - 0.3
+  - name: sparse_high_low
+    n_images: 10000
+    groups:
+    - intensity:
+      - 18000
+      - 20000
+      int_sd: 10000
+      n_max: 1
+      occurrence:
+      - 0.01
+      - 0.05
+      noise_range:
+      - 0.01
+      - 0.05
+    - intensity:
+      - 1000
+      - 6000
+      int_sd: 500
+      n_max: 3
+      occurrence:
+      - 0.01
+      - 0.05
+      noise_range:
+      - 0.05
+      - 0.3
+sparse_extra:
+  seed: 1
+  n_samples: 100
+  rt_bins: 3500
+  start_index: 130001
+  labels:
+  - v1
+  - v2
+  - v3
+  background:
+    mean: 500
+    sd: 200
+  out_dir: ./results/synthetic
+  subsets:
+  - name: sparse_extra
+    n_images: 10000
+    groups:
+    - intensity:
+      - 2000000
+      - 20000000
+      int_sd: 5000000
+      n_max: 1
+      occurrence:
+      - 0.01
+      - 0.03
+      noise_range:
+      - 0.01
+      - 0.05
+    - intensity:
+      - 200000
+      - 2000000
+      int_sd: 200000
+      n_max: 3
+      occurrence:
+      - 0.01
+      - 0.03
+      noise_range:
+      - 0.05
+      - 0.3
+main_equivalent:
+  seed: 0
+  n_samples: 100
+  rt_bins: 3500
+  start_index: 70001
+  labels:
+  - v1
+  - v2
+  - v3
+  background:
+    mean: 500
+    sd: 200
+  out_dir: ./results/synthetic_original
+  subsets:
+  - name: original
+    n_images: 10000
+    groups:
+    - intensity:
+      - 18000
+      - 20000
+      int_sd: 10000
+      n_max: 1
+      occurrence:
+      - 0.1
+      - 0.5
+      tau_range:
+      - 0.2
+      - 0.8
+      max_bins_shift_choices:
+      - 0
+      - 1
+      - 2
+    - intensity:
+      - 2000
+      - 5000
+      int_sd: 500
+      n_max: 3
+      occurrence:
+      - 0.1
+      - 0.5
+      tau_range:
+      - 0.2
+      - 0.8
+      max_bins_shift_choices:
+      - 0
+      - 1
+      - 2

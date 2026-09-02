@@ -1,5 +1,5 @@
 """
-    python -m src.extracting_labels_erosion --config data/configs/config_extracting_labels_erosion.yaml
+    python -m src.extracting_labels_erosion --config configs/config_extracting_labels_erosion.yaml
 """
 
 import os
@@ -14,16 +14,15 @@ import matplotlib.pyplot as plt
 from skimage.measure import label, regionprops
 from scipy import ndimage
 
-from src.config import parse_config_arg
+from src.common import parse_config_arg
+from src.filters import apply_label_filters
 
 
 def label_to_rgb_pil(lbl):
     rgb = np.zeros((lbl.shape[0], lbl.shape[1], 3), dtype=np.uint8)
     rgb[lbl == 1] = [255, 255, 255]
     rgb[lbl == 2] = [255,   0,   0]
-    # 0 stays black
     return Image.fromarray(rgb)
-
 
 def load_raw_image(images_raw, base):
     npy = os.path.join(images_raw, base + "_000.npy")
@@ -34,7 +33,6 @@ def load_raw_image(images_raw, base):
         return np.asanyarray(nib.load(niigz).dataobj, dtype=np.float32)
     raise FileNotFoundError(f"raw image for '{base}' not found as .npy or .nii.gz in {images_raw}")
 
-
 def main(cfg):
     predictions_dir = cfg["predictions_dir"]
     images_raw = cfg["images_raw"]
@@ -42,7 +40,15 @@ def main(cfg):
     task_name = cfg.get("task_name", "")
     erosion_width = cfg.get("erosion_width", 3)
 
+    if not os.path.isdir(predictions_dir):
+        raise SystemExit(f"predictions_dir does not exist: {predictions_dir}")
+
     labels = sorted(f for f in os.listdir(predictions_dir) if f.endswith(".nii.gz"))
+    if not labels:
+        raise SystemExit(
+            f"no .nii.gz predictions in {predictions_dir} - check that yucca_inference ran "
+            f"and that predictions_dir points at the version_N/<checkpoint> folder"
+        )
 
     os.makedirs(output_dir, exist_ok=True)
     print(f"Labels saved in: {output_dir}")
@@ -57,13 +63,16 @@ def main(cfg):
 
     for k in range(len(labels)):
 
-        if (k / len(labels) * 100) % 10 == 0:
-            print(f"Percentage of images done: {k / len(labels) * 100}")
+        if len(labels) >= 10 and k % max(1, len(labels) // 10) == 0:
+            print(f"Percentage of images done: {round(k / len(labels) * 100)}", flush=True)
 
         lbl_name = labels[k]
         base_name = re.sub(".nii.gz", "", lbl_name)
 
         img = nib.load(os.path.join(predictions_dir, lbl_name)).get_fdata()
+
+        # Stage 4, label side. No-op unless cfg["filters"]["labels"] is set - see src/filters.py.
+        img = apply_label_filters(img, cfg, verbose=(k == 0))
 
         img_raw = load_raw_image(images_raw, base_name)
 
@@ -114,7 +123,6 @@ def main(cfg):
     ms2_files = [f for f in os.listdir(overlap_folder) if "MS2_" in f]
     print(f"Found {len(ms1_files)} MS1 files")
     print(f"Found {len(ms2_files)} MS2 files")
-
 
 if __name__ == "__main__":
     main(parse_config_arg(description="Extract single peak labels from Yucca predictions."))
