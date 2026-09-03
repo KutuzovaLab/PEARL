@@ -15,7 +15,6 @@ from skimage.measure import label, regionprops
 from scipy import ndimage
 
 from src.common import parse_config_arg
-from src.filters import apply_label_filters
 
 
 def label_to_rgb_pil(lbl):
@@ -70,9 +69,6 @@ def main(cfg):
         base_name = re.sub(".nii.gz", "", lbl_name)
 
         img = nib.load(os.path.join(predictions_dir, lbl_name)).get_fdata()
-
-        # Stage 4, label side. No-op unless cfg["filters"]["labels"] is set - see src/filters.py.
-        img = apply_label_filters(img, cfg, verbose=(k == 0))
 
         img_raw = load_raw_image(images_raw, base_name)
 

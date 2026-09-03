@@ -1,8 +1,9 @@
-#   python -m src.mzml_to_npy              --config configs/wastewater.yaml --section images
-#   python -m src.taskconvert inference    --src results/eic/wastewater/images --task Task202_wastewater --prefix wastewater
+# Wastewater, DDA (Orbitrap), 54 mzML. DDA images MS1 only, so matching is skipped.
+#   python -m src.mzml_to_npy               --config configs/wastewater.yaml --section images
+#   python -m src.taskconvert inference     --src results/eic/wastewater/images --task Task202_wastewater --prefix wastewater
+#   python -m src.yucca_inference_run       -t Task202_wastewater -s Task100_synth -d 2D -m UNet --version 0
 #   python -m src.extracting_labels_erosion --config configs/wastewater.yaml --section labels
-#   python -m src.matching_MS1_MS2         --config configs/wastewater.yaml --section matching
-#   python -m src.validate_run             --config configs/wastewater.yaml --section validation
+#   python -m src.matching_MS1_MS2          --config configs/wastewater.yaml --section matching
 
 task: Task202_wastewater
 images:
@@ -25,31 +26,8 @@ labels:
   output_dir: results/clustering/wastewater/L3_erosion
   task_name: wastewater
   erosion_width: 3
-  filters:
-    labels: []
 matching:
   input_dir: results/clustering/wastewater/L3_erosion/single_labels_overlap
   output_dir: results/clustering/wastewater/L3_erosion/clusters_k30
   k: 30
   binary: false
-  filters:
-    links: []
-validation:
-  branch: wastewater
-  results_path: data/reference/aligned_features_extracted_0903.csv
-  mzml_dir: data/mzml/wastewater
-  qc_mzml: data/mzml/wastewater/QC.mzML
-  drop_samples:
-  - T3IN1_2.mzML
-  rt_range:
-  - 0
-  - 1000
-  rt_bin_size: 0.45
-  mz_window: null
-  single_labels_dir: results/clustering/wastewater/L3_erosion/single_labels_overlap
-  clusters_path: results/clustering/wastewater/L3_erosion/clusters_k30/final_matches.csv
-  dda_path: null
-  output_dir: results/wastewater
-  task_name: wastewater
-  sirius:
-    enabled: false

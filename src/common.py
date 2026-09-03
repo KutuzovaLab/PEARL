@@ -3,15 +3,6 @@ import shlex
 import yaml
 import numpy as np
 
-# A required input file or external tool is not available
-class MissingInput(Exception):
-    def __init__(self, path, purpose, notebook_ref=None):
-        self.path = str(path)
-        self.purpose = purpose
-        self.notebook_ref = notebook_ref
-        ref = f" ({notebook_ref})" if notebook_ref else ""
-        super().__init__(f"missing input: {self.path} - needed for {purpose}{ref}")
-
 def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
@@ -56,6 +47,7 @@ def shell_exports(cfg):
         f"SYNTH_SRC={shlex.quote(str(load_config(v['synthetic_config'])[v['synthetic_section']]['out_dir']))}",
         f"EIC_DIR={shlex.quote(str(images['output_folder']))}",
         f"EIC_FILES={expected_eic_files(images)}",
+        f"ACQUISITION={shlex.quote(str(images.get('acquisition', 'dia')))}",
         f'EPOCHS="${{EPOCHS:-{v["epochs"]}}}"',
         f'PATCH="${{PATCH:-{v["patch"]}}}"',
         f'BATCH="${{BATCH:-{v["batch"]}}}"',

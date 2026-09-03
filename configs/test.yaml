@@ -1,7 +1,3 @@
-
-#   ./run_pipeline.sh test          (no env vars; expect well under 10 minutes)
-# Uses data/mzml/standards and data/reference/Standards_NEG.xlsx.
-
 task: Task900_test
 synthetic_config: configs/test.yaml
 synthetic_section: synthetic
@@ -9,7 +5,6 @@ synthetic_task: Task901_testSynth
 epochs: 2
 patch: 64 64
 batch: 8
-
 synthetic:
   seed: 0
   n_samples: 8
@@ -84,38 +79,8 @@ labels:
   output_dir: results/clustering/test/L3_erosion
   task_name: test
   erosion_width: 3
-  filters:
-    labels: []
 matching:
   input_dir: results/clustering/test/L3_erosion/single_labels_overlap
   output_dir: results/clustering/test/L3_erosion/clusters_k30
   k: 30
   binary: false
-  filters:
-    links: []
-validation:
-  branch: standneg
-  results_path: data/reference/Standards_NEG.xlsx
-  suspect_list_path: null
-  suspect_list_sheet: SSList_NEG
-  fill_min: 0.7
-  qc_mzml: data/mzml/standards/230503_Batch2_13.mzML
-  rt_range:
-  - 100
-  - 1100
-  rt_bin_size: 0.73
-  mz_window:
-  - 265
-  - 290
-  single_labels_dir: results/clustering/test/L3_erosion/single_labels_overlap
-  clusters_path: results/clustering/test/L3_erosion/clusters_k30/final_matches.csv
-  dda_path: null
-  mona_library: data/libraries/mona_library.pkl
-  library_tol: 0.1
-  library_instrument: QTOF|Q-TOF
-  output_dir: results/test
-  task_name: test
-  cosine_tol: 0.5
-  dda_tol: 0.1
-  sirius:
-    enabled: false

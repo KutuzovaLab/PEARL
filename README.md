@@ -1,16 +1,12 @@
 # PEARL
 
 Peak Extraction And Representation Learner: LC-HRMS peak detection and MS1-MS2 association
-by U-Net segmentation of stacked extracted-ion-chromatogram images, trained on
-synthetic data.
+by U-Net segmentation
 
 ## Layout
 
 ```
 data/           
-  mzml/         wheat (82 present, 63 used) · wastewater (54) · fluorine (22)
-  reference/    MS-DIAL / MZmine / OpenMS result tables, standards list, injection order
-  libraries/    MoNA export, MassSpecGym DreaMS embeddings, SIRIUS, parsed MoNA library
 results/        
 configs/        one YAML per dataset, plus the synthetic generator and the test
 src/            all functionality, run as `python -m src.<module>`
@@ -48,18 +44,3 @@ python -m src.extracting_labels_erosion --config configs/wheat.yaml --section la
 python -m src.matching_MS1_MS2          --config configs/wheat.yaml --section matching
 python -m src.validate_run              --config configs/wheat.yaml --section validation
 ```
-
-The MoNA library is built once, filtered to the compounds being validated:
-
-```bash
-python -m src.mona --export data/libraries/MoNA-export-LC-MS-MS_Positive_Mode.zip \
-    --out data/libraries/mona_library.pkl --inchikeys-from results/wheat/compound_info.pkl
-```
-
-## Datasets
-
-| Config | Acquisition | Reference | Compounds | Samples |
-|---|---|---|---|---|
-| `wheat` | DIA | MS-DIAL | 350 | 63 |
-| `wastewater` | DDA | MZmine | 70 | 54 |
-| `fluorine` | DDA  | OpenMS | 567 (of 811) | 22 |

@@ -13,7 +13,7 @@ import nibabel as nib
 from sklearn.model_selection import train_test_split
 from yucca.pipeline.task_conversion.utils import generate_dataset_json
 
-LABELS = {0: "background", 1: "peak"}
+LABELS = {0: "no signal", 1: "signal", 2: "overlap"}
 
 def _task_dirs(task):
     raw = os.environ.get("YUCCA_RAW_DATA")
@@ -80,7 +80,7 @@ def convert_synthetic(src, task, label_version="v3", test_size=0.0, seed=42):
     generate_dataset_json(
         os.path.join(base, "dataset.json"),
         dirs["imagesTr"], dirs["imagesTs"],
-        modalities=("synthetic",),
+        modalities=("T1",),   # what the original task conversion used; name is cosmetic
         labels=LABELS,
         dataset_name=task,
         license="internal",
@@ -89,7 +89,7 @@ def convert_synthetic(src, task, label_version="v3", test_size=0.0, seed=42):
     )
     print(f"converted {len(cases)} cases -> {len(list(tr))} train / {len(list(ts))} holdout in {base}")
 
-def convert_inference(src, task, prefix=None, modality="synthetic", limit=None):
+def convert_inference(src, task, prefix=None, modality="T1", limit=None):
     raw = os.environ.get("YUCCA_RAW_DATA")
     if not raw:
         raise SystemExit("YUCCA_RAW_DATA is not set")
@@ -143,7 +143,7 @@ def main():
     i.add_argument("--src", required=True)
     i.add_argument("--task", required=True)
     i.add_argument("--prefix", default=None)
-    i.add_argument("--modality", default="synthetic")
+    i.add_argument("--modality", default="T1")
     i.add_argument("--limit", type=int, default=None)
 
     a = ap.parse_args()

@@ -1,8 +1,9 @@
-#   python -m src.mzml_to_npy              --config configs/fluorine.yaml --section images
-#   python -m src.taskconvert inference    --src results/eic/fluorine/images --task Task203_fluorine --prefix fluorine
+# Fluorinated standard mixes, DDA (Orbitrap), 22 mzML. MS1 only, so matching is skipped.
+#   python -m src.mzml_to_npy               --config configs/fluorine.yaml --section images
+#   python -m src.taskconvert inference     --src results/eic/fluorine/images --task Task203_fluorine --prefix fluorine
+#   python -m src.yucca_inference_run       -t Task203_fluorine -s Task100_synth -d 2D -m UNet --version 0
 #   python -m src.extracting_labels_erosion --config configs/fluorine.yaml --section labels
-#   python -m src.matching_MS1_MS2         --config configs/fluorine.yaml --section matching
-#   python -m src.validate_run             --config configs/fluorine.yaml --section validation
+#   python -m src.matching_MS1_MS2          --config configs/fluorine.yaml --section matching
 
 task: Task203_fluorine
 images:
@@ -25,31 +26,8 @@ labels:
   output_dir: results/clustering/fluorine/L3_erosion
   task_name: fluorine
   erosion_width: 3
-  filters:
-    labels: []
 matching:
   input_dir: results/clustering/fluorine/L3_erosion/single_labels_overlap
   output_dir: results/clustering/fluorine/L3_erosion/clusters_k30
   k: 30
   binary: false
-  filters:
-    links: []
-validation:
-  branch: flourid
-  results_path: data/reference/PM1-5-FluoroMix_50_ugL_pos_RTs_CUR_filtered.xlsx
-  standards_path: data/reference/qnts_mixes.xlsx
-  mzml_dir: data/mzml/fluorine
-  qc_mzml: data/mzml/fluorine/027_QC_PM1_1_ugL_pos_dda_5_inj.mzML
-  reported_concentration: 50
-  rt_range:
-  - 0
-  - 1260
-  rt_bin_size: 0.68
-  mz_window: null
-  single_labels_dir: results/clustering/fluorine/L3_erosion/single_labels_overlap
-  clusters_path: results/clustering/fluorine/L3_erosion/clusters_k30/final_matches.csv
-  dda_path: null
-  output_dir: results/fluorine
-  task_name: fluorine
-  sirius:
-    enabled: false

@@ -1,8 +1,9 @@
-#   python -m src.mzml_to_npy              --config configs/wheat.yaml --section images
-#   python -m src.taskconvert inference    --src results/eic/wheat/images --task Task201_wheat --prefix wheat
+# Wheat metabolomics, DIA (Waters MSE), 63 of 82 mzML selected by the reference table.
+#   python -m src.mzml_to_npy               --config configs/wheat.yaml --section images
+#   python -m src.taskconvert inference     --src results/eic/wheat/images --task Task201_wheat --prefix wheat
+#   python -m src.yucca_inference_run       -t Task201_wheat -s Task100_synth -d 2D -m UNet --version 0
 #   python -m src.extracting_labels_erosion --config configs/wheat.yaml --section labels
-#   python -m src.matching_MS1_MS2         --config configs/wheat.yaml --section matching
-#   python -m src.validate_run             --config configs/wheat.yaml --section validation
+#   python -m src.matching_MS1_MS2          --config configs/wheat.yaml --section matching
 
 task: Task201_wheat
 images:
@@ -15,8 +16,8 @@ images:
   - 1100
   rt_bin_size: 0.73
   mz_range:
-  - 50
-  - 1000
+  - 100
+  - 1200
   mass_tol: 0.1
   length_spline: 5
   int_thres: 1000
@@ -27,33 +28,8 @@ labels:
   output_dir: results/clustering/wheat/L3_erosion
   task_name: wheat
   erosion_width: 3
-  filters:
-    labels: []
 matching:
   input_dir: results/clustering/wheat/L3_erosion/single_labels_overlap
   output_dir: results/clustering/wheat/L3_erosion/clusters_k30
   k: 30
   binary: false
-  filters:
-    links: []
-validation:
-  branch: suspfinal
-  results_path: data/reference/DK_2021_Secondary metabolites_POS.csv
-  batch: Batch3
-  fill_min: 0.8
-  qc_mzml: data/mzml/wheat/230523_Batch3_090.mzML
-  rt_range:
-  - 100
-  - 1100
-  rt_bin_size: 0.73
-  mz_window: null
-  single_labels_dir: results/clustering/wheat/L3_erosion/single_labels_overlap
-  clusters_path: results/clustering/wheat/L3_erosion/clusters_k30/final_matches.csv
-  dda_path: null
-  mona_library: data/libraries/mona_library.pkl
-  library_tol: 0.1
-  library_instrument: QTOF|Q-TOF
-  output_dir: results/wheat
-  task_name: wheat
-  sirius:
-    enabled: false

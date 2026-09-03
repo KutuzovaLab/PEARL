@@ -11,7 +11,6 @@ from sklearn.neighbors import KDTree
 from tqdm import tqdm
 
 from src.common import parse_config_arg
-from src.filters import apply_link_filters
 
 def image_projection_embedding(img_path, binary=False):
     arr = np.load(img_path)
@@ -89,9 +88,6 @@ def main(cfg):
         for i in range(len(ms2_names))
         for j in range(K)
     ], columns=["ms2_name", "ms1_name", "distance"])
-
-    # Stage 4, link side. No-op unless cfg["filters"]["links"] is set - see src/filters.py.
-    ms2_to_ms1 = apply_link_filters(ms2_to_ms1, cfg)
 
     ms2_to_ms1.to_csv(os.path.join(output_dir, "final_matches.csv"), index=False)
     print("Matches found and saved!")
