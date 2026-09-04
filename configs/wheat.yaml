@@ -16,8 +16,8 @@ images:
   - 1100
   rt_bin_size: 0.73
   mz_range:
-  - 100
-  - 1200
+  - 50
+  - 1000
   mass_tol: 0.1
   length_spline: 5
   int_thres: 1000

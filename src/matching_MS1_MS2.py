@@ -63,8 +63,6 @@ def main(cfg):
     ms2_vectors, ms2_names = extract_embeddings(ms2_files, input_dir, binary=binary)
     print("All images embedded!")
 
-    # KDTree.query raises if k exceeds the number of points in the tree, which
-    # happens on small runs where k is left at the production default of 30.
     if K > len(ms1_names):
         print(f"k={K} exceeds the {len(ms1_names)} MS1 labels available; clamping k to {len(ms1_names)}")
         K = len(ms1_names)

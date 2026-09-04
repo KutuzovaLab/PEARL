@@ -22,11 +22,18 @@ env/
 # Numba cache
 .numba_cache/
 
-# Data / outputs (uncomment or adjust as needed)
+# Bulk data: pipeline inputs, generated outputs, and unused source material.
+# configs/ lives at the repo root precisely so it is NOT swept up by this.
 *.mzml
 *.npy
 *.png
 *.xlsx
 
-data
+data/
+results/
 .venv_yucca/
+.venv_dreams/
+
+bench_local.py
+# Model checkpoints (large binaries)
+checkpoints/

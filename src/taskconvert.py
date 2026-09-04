@@ -8,12 +8,19 @@ import glob
 import os
 import re
 
+import json
+
 import numpy as np
-import nibabel as nib
 from sklearn.model_selection import train_test_split
 from yucca.pipeline.task_conversion.utils import generate_dataset_json
 
 LABELS = {0: "no signal", 1: "signal", 2: "overlap"}
+
+def _mark_npy(base):
+    p = os.path.join(base, "dataset.json")
+    d = json.load(open(p))
+    d["image_extension"] = "npy"
+    json.dump(d, open(p, "w"), indent=2)
 
 def _task_dirs(task):
     raw = os.environ.get("YUCCA_RAW_DATA")
@@ -69,8 +76,8 @@ def convert_synthetic(src, task, label_version="v3", test_size=0.0, seed=42):
         sub, stem, cid = cases[i]
         img = np.load(f"{src}/{sub}/images/{stem}.npy").astype(np.float32)
         lbl = np.load(f"{src}/{sub}/labels/{label_version}/{stem}.npy").astype(np.uint8)
-        nib.save(nib.Nifti1Image(img, np.eye(4)), f"{img_out}/{cid}_000.nii.gz")
-        nib.save(nib.Nifti1Image(lbl, np.eye(4)), f"{lbl_out}/{cid}.nii.gz")
+        np.save(f"{img_out}/{cid}_000.npy", img)
+        np.save(f"{lbl_out}/{cid}.npy", lbl)
 
     for i in tr:
         save_pair(i, dirs["imagesTr"], dirs["labelsTr"])
@@ -87,6 +94,7 @@ def convert_synthetic(src, task, label_version="v3", test_size=0.0, seed=42):
         dataset_description=f"Synthetic LC-MS local smoke test (pooled, {label_version} labels)",
         dataset_reference="PEARL",
     )
+    _mark_npy(base)
     print(f"converted {len(cases)} cases -> {len(list(tr))} train / {len(list(ts))} holdout in {base}")
 
 def convert_inference(src, task, prefix=None, modality="T1", limit=None):
@@ -111,7 +119,7 @@ def convert_inference(src, task, prefix=None, modality="T1", limit=None):
         stem = os.path.splitext(os.path.basename(p))[0]
         cid = f"{prefix}_{stem}"
         img = np.load(p).astype(np.float32)
-        nib.save(nib.Nifti1Image(img, np.eye(4)), f"{dirs['imagesTs']}/{cid}_000.nii.gz")
+        np.save(f"{dirs['imagesTs']}/{cid}_000.npy", img)
 
     generate_dataset_json(
         os.path.join(base, "dataset.json"),
@@ -123,6 +131,7 @@ def convert_inference(src, task, prefix=None, modality="T1", limit=None):
         dataset_description=f"Inference task: real EIC images ({len(files)} cases), no ground-truth labels",
         dataset_reference="PEARL",
     )
+    _mark_npy(base)
     print(f"inference task ready: {len(files)} images -> {dirs['imagesTs']}")
     print(f"next: yucca_inference -t {task} -s <SOURCE_TASK> -d 2D -m UNet --no_wandb --disable_tta --no_eval")
 

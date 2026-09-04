@@ -22,9 +22,9 @@ _njit = nb.njit(cache=True) if _HAVE_NUMBA else (lambda f: f)
 @_njit
 def _fill_row_sums(lo, hi, inten, out_row):
     for b in range(lo.shape[0]):
-        s = np.float32(0.0)
+        s = 0.0
         for t in range(lo[b], hi[b]):
-            s = np.float32(s + inten[t])
+            s = s + inten[t]
         out_row[b] = s
 
 if _HAVE_NUMBA:
@@ -62,13 +62,11 @@ def interpolating_rt(colvals, sub_rts, f3_pos, length_spline):
 def making_rt_bins(colvals, sub_rtbin, rt_bins):
     return _rowwise_bin_max(colvals, sub_rtbin, rt_bins.shape[0] - 1)
 
-# Reference tables are .xlsx (MS-DIAL standards) or .csv (MS-DIAL wheat).
 def _read_reference_table(path):
     if str(path).lower().endswith((".xlsx", ".xls")):
         return pd.read_excel(path, skiprows=4, header=0)
     return pd.read_csv(path, skiprows=4, header=0, low_memory=False)
 
-# '230523_Batch3_103_Blank_13' -> '230523_Batch3_103'
 def _stem3(names):
     return pd.Index(names).str.split("_").str[:3].str.join("_")
 
@@ -100,7 +98,6 @@ def selecting_files(mzml_path, suspect_path=None, order_path=None):
     print(f"Final number of included samples: {len(files)}", flush=True)
     return files
 
-# Build stacked-EIC images from mzML files.
 def read_mzml_files(path, files, rt_bin_size, rt_range, mz_range, mass_tol, length_spline=5,
                     acquisition="dia"):
     if acquisition not in ("dia", "dda"):
@@ -168,7 +165,6 @@ def read_mzml_files(path, files, rt_bin_size, rt_range, mz_range, mass_tol, leng
 
     return results_ms1, results_ms2
 
-# Write one .npy image + threshold label per mass channel. ms2 may be None (DDA).
 def saving_results(ms1, ms2, output_folder, mz_range, mass_tol, int_thres=1000):
     os.makedirs(os.path.join(output_folder, 'images'), exist_ok=True)
     os.makedirs(os.path.join(output_folder, 'labels'), exist_ok=True)

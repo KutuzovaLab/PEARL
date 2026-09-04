@@ -29,9 +29,7 @@ PIPELINE_DEFAULTS = {
     "batch": 44,
 }
 
-# How many .npy an images section should produce - DIA writes MS1+MS2, DDA MS1 only
 def expected_eic_files(images):
-
     lo, hi = images["mz_range"]
     n_bins = len(np.arange(lo, hi, images["mass_tol"]))
     return n_bins * (1 if images.get("acquisition", "dia") == "dda" else 2)
