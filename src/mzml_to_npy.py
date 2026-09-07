@@ -62,13 +62,6 @@ def making_rt_bins(colvals, sub_rtbin, rt_bins):
     return _rowwise_bin_max(colvals, sub_rtbin, rt_bins.shape[0] - 1)
 
 def selecting_files(mzml_path, files=None):
-    """Stems (no .mzML) of the files to process, in image-row order.
-
-    Every .mzML in `mzml_path` is used unless the config pins an explicit
-    `files` list -- the wheat set, for instance, is a 63-sample subset of the
-    82 runs on disk. Order is the sorted filename order, which for these
-    datasets is also the acquisition order.
-    """
     found = sorted(f[:-5] for f in os.listdir(mzml_path) if f.endswith(".mzML"))
 
     if files:

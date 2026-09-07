@@ -1,7 +1,14 @@
 if [ ! -d .venv_yucca ]; then
-    command -v uv >/dev/null || { echo "please install uv first (https://docs.astral.sh/uv/)"; exit 1; }
-    uv venv --python 3.11 .venv_yucca
-    VIRTUAL_ENV=.venv_yucca uv pip install -r requirements.txt
+    # torch==2.1.2 has no wheels above 3.11, so pin the interpreter.
+    BASE_PY="${PYTHON:-python3.11}"
+    command -v "$BASE_PY" >/dev/null || {
+        echo "need Python 3.11 to build .venv_yucca (torch==2.1.2 has no wheels above 3.11)."
+        echo "install it, or point PYTHON at one:  PYTHON=/path/to/python3.11 $0 $*"
+        exit 1
+    }
+    "$BASE_PY" -m venv .venv_yucca
+    .venv_yucca/bin/python -m pip install --upgrade pip
+    .venv_yucca/bin/python -m pip install -r requirements.txt
     .venv_yucca/bin/python -m src.patch_yucca_npy
 fi
 PY=.venv_yucca/bin/python

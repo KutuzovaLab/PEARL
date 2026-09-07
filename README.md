@@ -19,11 +19,13 @@ configs/        one YAML per dataset
 ## Install
 
 ```bash
-uv venv --python 3.11 .venv_yucca
-VIRTUAL_ENV=.venv_yucca uv pip install -r requirements.txt
+python3.11 -m venv .venv_yucca
+.venv_yucca/bin/python -m pip install --upgrade pip
+.venv_yucca/bin/python -m pip install -r requirements.txt
+.venv_yucca/bin/python -m src.patch_yucca_npy
 
-uv venv --python 3.11 .venv_dreams
-VIRTUAL_ENV=.venv_dreams uv pip install git+https://github.com/pluskal-lab/DreaMS.git openpyxl
+python3.11 -m venv .venv_dreams
+.venv_dreams/bin/python -m pip install git+https://github.com/pluskal-lab/DreaMS.git openpyxl
 ```
 
 ## Run
