@@ -59,20 +59,20 @@ synthetic:
       - 0.01
       - 0.05
 images:
+  # Public data: MetaboLights MTBLS1129 QC replicates, fetched by
+  #   python -m src.fetch_test_data
   acquisition: dia
-  suspect_path: data/reference/Standards_NEG.xlsx
-  mzml_path: data/mzml/standards
+  mzml_path: data/mzml/test
   output_folder: results/eic/test
   rt_range:
-  - 100
-  - 1100
+  - 0
+  - 720
   rt_bin_size: 0.73
   mz_range:
-  - 265
-  - 290
+  - 200
+  - 225
   mass_tol: 0.1
   length_spline: 5
-  int_thres: 1000
 labels:
   predictions_dir: results/yucca/results/Task900_test/Task901_testSynth/UNet__2D/YuccaManager__YuccaPlanner/default/kfold_5_fold_0/version_0/best
   images_raw: results/yucca/raw_data/Task900_test/imagesTs

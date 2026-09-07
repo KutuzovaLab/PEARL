@@ -29,10 +29,14 @@ env/
 *.npy
 *.png
 
-# Bulk data: pipeline inputs, generated outputs, and unused source material.
-# configs/ lives at the repo root precisely so it is NOT swept up by this.
-data/
 results/
+GITIGNORED/
+data/*
+!data/mzml/
+data/mzml/*
+!data/mzml/*/
+data/mzml/*/*
+!data/mzml/*/.gitkeep
 checkpoints/
 .venv_yucca/
 .venv_dreams/
@@ -177,7 +181,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# --- from main ---
 *$py.class
 *.cover
 *.egg

@@ -1,46 +1,32 @@
 #!/bin/bash
-# Run the pipeline on a dataset:        ./run_pipeline.sh wheat
-# Use the published model:              CKPT=hf://UffeDalgas/temporary_p/best.ckpt ./run_pipeline.sh wheat
+# Run the pipeline on a dataset:   ./run_pipeline.sh wheat
+#
+# mzML -> EIC images -> model predictions -> peak labels -> MS1/MS2 matching.
+# Uses the published checkpoint every time; no training involved.
+#
+#   CKPT=...       use a different checkpoint (hf://owner/repo/file.ckpt or a local path)
+#   KEEP_MODEL=1   don't install a checkpoint; use the model already in place
+#                  (i.e. one you just built with ./train_model.sh)
 set -euo pipefail
 cd "$(dirname "$0")"
 
 DATASET="${1:-wheat}"
 CFG="configs/$DATASET.yaml"
+source ./_env.sh
 
-# Build the environment.
-if [ ! -d .venv_yucca ]; then
-    command -v uv >/dev/null || { echo "please install uv first (https://docs.astral.sh/uv/)"; exit 1; }
-    uv venv --python 3.11 .venv_yucca
-    VIRTUAL_ENV=.venv_yucca uv pip install -r requirements.txt
-    .venv_yucca/bin/python -m src.patch_yucca_npy
+CKPT="${CKPT:-hf://UffeDalgas/temporary_p/best.ckpt}"
+
+if [ "$DATASET" = test ] && [ "$(ls data/mzml/test/*.mzML 2>/dev/null | wc -l)" -eq 0 ]; then
+    "$PY" -m src.fetch_test_data
 fi
-PY=.venv_yucca/bin/python
-BIN=.venv_yucca/bin
 
-# Task name, patch/batch/epochs and expected image counts, read from the config.
-eval "$("$PY" -m src.common --config "$CFG" --shell)"
-
-# Yucca keeps its data under results/yucca.
-export YUCCA_SOURCE="$PWD/results/yucca/source"
-export YUCCA_RAW_DATA="$PWD/results/yucca/raw_data"
-export YUCCA_PREPROCESSED_DATA="$PWD/results/yucca/preprocessed_data"
-export YUCCA_MODELS="$PWD/results/yucca/models"
-export YUCCA_RESULTS="$PWD/results/yucca/results"
-mkdir -p results/yucca/{source,raw_data,preprocessed_data,models,results}
-export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUNBUFFERED=1
-
-# Get a model: the checkpoint or train on synthetic data once.
-if [ -n "${CKPT:-}" ]; then
-    SYNTH_TASK=Task043_sim14L3
+if [ -z "${KEEP_MODEL:-}" ]; then
     case "$CKPT" in hf://*) CKPT="$("$PY" -m src.fetch_checkpoint "$CKPT")" ;; esac
     "$PY" -m src.install_checkpoint --ckpt "$CKPT" --task "$SYNTH_TASK"
-elif [ -n "${FORCE_TRAIN:-}" ] || [ ! -d "$YUCCA_MODELS/$SYNTH_TASK" ]; then
-    "$PY" -m src.simulating_data_paper --config "$SYNTH_CFG" --section "$SYNTH_SEC"
-    "$PY" -m src.taskconvert synthetic --src "$SYNTH_SRC" --task "$SYNTH_TASK"
-    "$BIN/yucca_preprocess" -t "$SYNTH_TASK"
-    "$BIN/yucca_train" -t "$SYNTH_TASK" -d 2D -m UNet \
-        --epochs "$EPOCHS" --patch_size $PATCH --batch_size "$BATCH" \
-        --num_workers "${WORKERS:-0}" --precision "${PRECISION:-32}" --disable_logging --new_version
+elif [ ! -d "$YUCCA_MODELS/$SYNTH_TASK" ]; then
+    echo "KEEP_MODEL is set but there is no model at $YUCCA_MODELS/$SYNTH_TASK"
+    echo "run ./train_model.sh $DATASET first, or unset KEEP_MODEL to use the published checkpoint"
+    exit 1
 fi
 
 # images -> model predictions -> peak labels -> MS1-MS2 matching.

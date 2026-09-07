@@ -1,14 +1,12 @@
-# Fluorinated standard mixes, DDA (Orbitrap), 22 mzML. MS1 only, so matching is skipped.
 #   python -m src.mzml_to_npy               --config configs/fluorine.yaml --section images
 #   python -m src.taskconvert inference     --src results/eic/fluorine/images --task Task203_fluorine --prefix fluorine
-#   python -m src.yucca_inference_run       -t Task203_fluorine -s Task100_synth -d 2D -m UNet --version 0
+#   yucca_inference -t Task203_fluorine -s Task100_synth -d 2D -m UNet --version 0 --no_wandb --disable_tta --no_eval
 #   python -m src.extracting_labels_erosion --config configs/fluorine.yaml --section labels
 #   python -m src.matching_MS1_MS2          --config configs/fluorine.yaml --section matching
 
 task: Task203_fluorine
 images:
   acquisition: dda
-  suspect_path: null
   mzml_path: data/mzml/fluorine
   output_folder: results/eic/fluorine
   rt_range:
@@ -19,7 +17,6 @@ images:
   - 90
   - 1300
   mass_tol: 0.1
-  int_thres: 1000
 labels:
   predictions_dir: results/yucca/results/Task203_fluorine/Task100_synth/UNet__2D/YuccaManager__YuccaPlanner/default/kfold_5_fold_0/version_0/best
   images_raw: results/yucca/raw_data/Task203_fluorine/imagesTs

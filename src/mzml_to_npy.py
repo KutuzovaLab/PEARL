@@ -3,7 +3,6 @@ os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 import gc
 import time
 import numpy as np
-import pandas as pd
 import pyopenms as oms
 from scipy.interpolate import CubicSpline
 
@@ -62,41 +61,30 @@ def interpolating_rt(colvals, sub_rts, f3_pos, length_spline):
 def making_rt_bins(colvals, sub_rtbin, rt_bins):
     return _rowwise_bin_max(colvals, sub_rtbin, rt_bins.shape[0] - 1)
 
-def _read_reference_table(path):
-    if str(path).lower().endswith((".xlsx", ".xls")):
-        return pd.read_excel(path, skiprows=4, header=0)
-    return pd.read_csv(path, skiprows=4, header=0, low_memory=False)
+def selecting_files(mzml_path, files=None):
+    """Stems (no .mzML) of the files to process, in image-row order.
 
-def _stem3(names):
-    return pd.Index(names).str.split("_").str[:3].str.join("_")
+    Every .mzML in `mzml_path` is used unless the config pins an explicit
+    `files` list -- the wheat set, for instance, is a 63-sample subset of the
+    82 runs on disk. Order is the sorted filename order, which for these
+    datasets is also the acquisition order.
+    """
+    found = sorted(f[:-5] for f in os.listdir(mzml_path) if f.endswith(".mzML"))
 
-def selecting_files(mzml_path, suspect_path=None, order_path=None):
-    files = sorted(f[:-5] for f in os.listdir(mzml_path) if f.endswith(".mzML"))
+    if files:
+        wanted = list(dict.fromkeys(files))
+        missing = [f for f in wanted if f not in set(found)]
+        if missing:
+            raise SystemExit(
+                f"{len(missing)} file(s) listed in the config are not in {mzml_path}: "
+                f"{', '.join(missing[:5])}{' ...' if len(missing) > 5 else ''}")
+        selected = [f for f in found if f in set(wanted)]
+        print(f"selecting_files: {len(selected)} of {len(found)} mzML selected by config",
+              flush=True)
+        found = selected
 
-    if suspect_path:
-        ref = _read_reference_table(suspect_path)
-        covered = set(_stem3(ref.columns[32:]))
-        selected = [f for f in files if f in covered]
-        if len(selected) != len(files):
-            print(f"selecting_files: {len(selected)} of {len(files)} mzML are covered by "
-                  f"{os.path.basename(suspect_path)}", flush=True)
-        files = selected
-
-    if order_path:
-        order = pd.read_excel(order_path)
-        key = dict(zip(_stem3(order["File name"].astype(str)),
-                       pd.to_numeric(order["Injection order"], errors="coerce")))
-        known = [f for f in files if f in key]
-        if known and [key[f] for f in known] != sorted(key[f] for f in known):
-            print(f"selecting_files: WARNING - filename order disagrees with injection order "
-                  f"in {os.path.basename(order_path)}; image rows may not be in acquisition "
-                  f"sequence", flush=True)
-        else:
-            print(f"selecting_files: filename order confirmed as acquisition order "
-                  f"({len(known)}/{len(files)} samples checked)", flush=True)
-
-    print(f"Final number of included samples: {len(files)}", flush=True)
-    return files
+    print(f"Final number of included samples: {len(found)}", flush=True)
+    return found
 
 def read_mzml_files(path, files, rt_bin_size, rt_range, mz_range, mass_tol, length_spline=5,
                     acquisition="dia"):
@@ -165,9 +153,8 @@ def read_mzml_files(path, files, rt_bin_size, rt_range, mz_range, mass_tol, leng
 
     return results_ms1, results_ms2
 
-def saving_results(ms1, ms2, output_folder, mz_range, mass_tol, int_thres=1000):
+def saving_results(ms1, ms2, output_folder, mz_range, mass_tol):
     os.makedirs(os.path.join(output_folder, 'images'), exist_ok=True)
-    os.makedirs(os.path.join(output_folder, 'labels'), exist_ok=True)
     mass_bins = np.arange(mz_range[0], mz_range[1], mass_tol)
 
     for i, mb in enumerate(mass_bins):
@@ -179,11 +166,8 @@ def saving_results(ms1, ms2, output_folder, mz_range, mass_tol, int_thres=1000):
                 continue
             filename = f"{level}_{mb1}_{mb2}.npy"
             np.save(os.path.join(output_folder, 'images', filename), arr[i])
-            np.save(os.path.join(output_folder, 'labels', filename),
-                    (arr[i] > int_thres).astype(np.uint8))
 
 def main(cfg):
-    suspect_path = cfg.get("suspect_path")
     mzml_path = cfg["mzml_path"]
     output_folder = cfg["output_folder"]
     os.makedirs(output_folder, exist_ok=True)
@@ -193,10 +177,9 @@ def main(cfg):
     mz_range = cfg["mz_range"]
     mass_tol = cfg["mass_tol"]
     length_spline = cfg.get("length_spline", 5)
-    int_thres = cfg.get("int_thres", 1000)
     acquisition = cfg.get("acquisition", "dia")
 
-    final_files = selecting_files(mzml_path, suspect_path, cfg.get("order_path"))
+    final_files = selecting_files(mzml_path, cfg.get("files"))
 
     print(f'Reading raw files ({acquisition.upper()})...', flush=True)
     ms1, ms2 = read_mzml_files(
@@ -204,7 +187,7 @@ def main(cfg):
         length_spline=length_spline, acquisition=acquisition,
     )
 
-    saving_results(ms1, ms2, output_folder, mz_range, mass_tol, int_thres=int_thres)
+    saving_results(ms1, ms2, output_folder, mz_range, mass_tol)
 
 if __name__ == "__main__":
     config = parse_config_arg(description="Convert mzML files to MS1/MS2 .npy images.")

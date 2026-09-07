@@ -1,14 +1,12 @@
-# Wheat metabolomics, DIA (Waters MSE), 63 of 82 mzML selected by the reference table.
 #   python -m src.mzml_to_npy               --config configs/wheat.yaml --section images
 #   python -m src.taskconvert inference     --src results/eic/wheat/images --task Task201_wheat --prefix wheat
-#   python -m src.yucca_inference_run       -t Task201_wheat -s Task100_synth -d 2D -m UNet --version 0
+#   yucca_inference -t Task201_wheat -s Task100_synth -d 2D -m UNet --version 0 --no_wandb --disable_tta --no_eval
 #   python -m src.extracting_labels_erosion --config configs/wheat.yaml --section labels
 #   python -m src.matching_MS1_MS2          --config configs/wheat.yaml --section matching
 
 task: Task201_wheat
 images:
   acquisition: dia
-  suspect_path: data/reference/DK_2021_Secondary metabolites_POS.csv
   mzml_path: data/mzml/wheat
   output_folder: results/eic/wheat
   rt_range:
@@ -20,8 +18,71 @@ images:
   - 1000
   mass_tol: 0.1
   length_spline: 5
-  int_thres: 1000
-  order_path: data/reference/selected_samples.xlsx
+  # Hard-coded acquisition order
+  files:
+  - 230523_Batch3_085
+  - 230523_Batch3_086
+  - 230523_Batch3_089
+  - 230523_Batch3_090
+  - 230523_Batch3_091
+  - 230523_Batch3_092
+  - 230523_Batch3_093
+  - 230523_Batch3_103
+  - 230523_Batch3_104
+  - 230523_Batch3_105
+  - 230523_Batch3_107
+  - 230523_Batch3_108
+  - 230523_Batch3_109
+  - 230523_Batch3_110
+  - 230523_Batch3_111
+  - 230523_Batch3_112
+  - 230523_Batch3_113
+  - 230523_Batch3_114
+  - 230523_Batch3_116
+  - 230523_Batch3_117
+  - 230523_Batch3_118
+  - 230523_Batch3_119
+  - 230523_Batch3_120
+  - 230523_Batch3_121
+  - 230523_Batch3_122
+  - 230523_Batch3_123
+  - 230523_Batch3_124
+  - 230523_Batch3_126
+  - 230523_Batch3_127
+  - 230523_Batch3_128
+  - 230523_Batch3_129
+  - 230523_Batch3_130
+  - 230523_Batch3_131
+  - 230523_Batch3_132
+  - 230523_Batch3_133
+  - 230523_Batch3_135
+  - 230523_Batch3_136
+  - 230523_Batch3_137
+  - 230523_Batch3_138
+  - 230523_Batch3_139
+  - 230523_Batch3_140
+  - 230523_Batch3_141
+  - 230523_Batch3_142
+  - 230523_Batch3_144
+  - 230523_Batch3_145
+  - 230523_Batch3_146
+  - 230523_Batch3_147
+  - 230523_Batch3_148
+  - 230523_Batch3_149
+  - 230523_Batch3_150
+  - 230523_Batch3_151
+  - 230523_Batch3_153
+  - 230523_Batch3_154
+  - 230523_Batch3_155
+  - 230523_Batch3_156
+  - 230523_Batch3_157
+  - 230523_Batch3_158
+  - 230523_Batch3_159
+  - 230523_Batch3_160
+  - 230523_Batch3_162
+  - 230523_Batch3_163
+  - 230523_Batch3_165
+  - 230523_Batch3_166
 labels:
   predictions_dir: results/yucca/results/Task201_wheat/Task100_synth/UNet__2D/YuccaManager__YuccaPlanner/default/kfold_5_fold_0/version_0/best
   images_raw: results/yucca/raw_data/Task201_wheat/imagesTs
