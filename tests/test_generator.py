@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import pytest
 import yaml
-from src.simulating_data_paper import generate_dataset
+from pearl.simulating_data_paper import generate_dataset
 
 def _gen_ours(out_dir, n=3):
     c = yaml.safe_load(open("configs/synthetic.yaml"))["main_equivalent"]

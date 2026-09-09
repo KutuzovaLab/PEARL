@@ -14,7 +14,7 @@ def main():
         raise SystemExit("YUCCA_MODELS is not set")
     dst = VDIR.format(models=models, task=a.task)
     os.makedirs(dst, exist_ok=True)
-    # a stale hparams.yaml one level up would override ckpt_plans; make sure none lingers
+
     hp = os.path.join(os.path.dirname(dst), "hparams.yaml")
     if os.path.exists(hp):
         os.remove(hp)

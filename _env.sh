@@ -1,5 +1,4 @@
 if [ ! -d .venv_yucca ]; then
-    # torch==2.1.2 has no wheels above 3.11, so pin the interpreter.
     BASE_PY="${PYTHON:-python3.11}"
     command -v "$BASE_PY" >/dev/null || {
         echo "need Python 3.11 to build .venv_yucca (torch==2.1.2 has no wheels above 3.11)."
@@ -9,17 +8,22 @@ if [ ! -d .venv_yucca ]; then
     "$BASE_PY" -m venv .venv_yucca
     .venv_yucca/bin/python -m pip install --upgrade pip
     .venv_yucca/bin/python -m pip install -r requirements.txt
-    .venv_yucca/bin/python -m src.patch_yucca_npy
+    .venv_yucca/bin/python -m pearl.patch_yucca_npy
 fi
 PY=.venv_yucca/bin/python
 BIN=.venv_yucca/bin
 
-eval "$("$PY" -m src.common --config "$CFG" --shell)"
+if [ -n "${CFG:-}" ]; then
+    eval "$("$PY" -m pearl.common --config "$CFG" --shell)"
+else
+    eval "$("$PY" -m pearl.common --train --shell)"
+fi
 
-export YUCCA_SOURCE="$PWD/results/yucca/source"
-export YUCCA_RAW_DATA="$PWD/results/yucca/raw_data"
-export YUCCA_PREPROCESSED_DATA="$PWD/results/yucca/preprocessed_data"
-export YUCCA_MODELS="$PWD/results/yucca/models"
-export YUCCA_RESULTS="$PWD/results/yucca/results"
-mkdir -p results/yucca/{source,raw_data,preprocessed_data,models,results}
+YUCCA_ROOT="${PEARL_OUTPUT:-$PWD/results}/yucca"
+export YUCCA_SOURCE="$YUCCA_ROOT/source"
+export YUCCA_RAW_DATA="$YUCCA_ROOT/raw_data"
+export YUCCA_PREPROCESSED_DATA="$YUCCA_ROOT/preprocessed_data"
+export YUCCA_MODELS="$YUCCA_ROOT/models"
+export YUCCA_RESULTS="$YUCCA_ROOT/results"
+mkdir -p "$YUCCA_ROOT"/{source,raw_data,preprocessed_data,models,results}
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUNBUFFERED=1

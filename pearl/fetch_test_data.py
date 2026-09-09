@@ -47,7 +47,7 @@ def download(url, dest, expect=None):
             raise SystemExit(f"checksum mismatch for {dest}\n  expected {expect}\n  got      {got}")
     os.replace(tmp, dest)
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--n", type=int, default=4,
@@ -55,7 +55,7 @@ def main():
     ap.add_argument("--out", default=DEFAULT_OUT, help=f"target dir (default {DEFAULT_OUT})")
     ap.add_argument("--force", action="store_true", help="re-download even if present and valid")
     ap.add_argument("--list", action="store_true", help="list available files and exit")
-    a = ap.parse_args()
+    a = ap.parse_args(argv)
 
     if a.list:
         print(f"{STUDY} QC replicates available: {', '.join(FILES)}")

@@ -1,5 +1,5 @@
 """
-    python -m src.extracting_labels_erosion --config configs/config_extracting_labels_erosion.yaml
+    python -m pearl.extracting_labels_erosion --config configs/config_extracting_labels_erosion.yaml
 """
 
 import os
@@ -14,21 +14,8 @@ import matplotlib.pyplot as plt
 from skimage.measure import label, regionprops
 from scipy import ndimage
 
-from src.common import parse_config_arg
-
-def apply_sn_w_filter(img, sample_thres, label_width):
-    int_sum = img.sum(axis=0)
-    keep = int_sum >= sample_thres
-    if label_width > 1 and keep.any():
-        idx = np.flatnonzero(keep)
-        splits = np.split(idx, np.flatnonzero(np.diff(idx) != 1) + 1)
-        keep = np.zeros_like(keep)
-        for run in splits:
-            if run.size >= label_width:
-                keep[run] = True
-    out = img.copy()
-    out[:, ~keep] = 0
-    return out
+from pearl.common import parse_config_arg
+from pearl.constants import EROSION_WIDTH
 
 def label_to_rgb_pil(lbl):
     rgb = np.zeros((lbl.shape[0], lbl.shape[1], 3), dtype=np.uint8)
@@ -50,9 +37,7 @@ def main(cfg):
     images_raw = cfg["images_raw"]
     output_dir = cfg["output_dir"]
     task_name = cfg.get("task_name", "")
-    erosion_width = cfg.get("erosion_width", 3)
-    sample_thres = cfg.get("sample_thres")   # opt-in sn/w filter; None = disabled
-    label_width = cfg.get("label_width", 1)
+    erosion_width = EROSION_WIDTH
 
     if not os.path.isdir(predictions_dir):
         raise SystemExit(f"predictions_dir does not exist: {predictions_dir}")
@@ -84,9 +69,6 @@ def main(cfg):
         base_name = re.sub(".nii.gz", "", lbl_name)
 
         img = nib.load(os.path.join(predictions_dir, lbl_name)).get_fdata()
-
-        if sample_thres is not None:
-            img = apply_sn_w_filter(img, sample_thres, label_width)
 
         img_raw = load_raw_image(images_raw, base_name)
 

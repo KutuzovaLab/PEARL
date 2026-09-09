@@ -1,5 +1,5 @@
 """
-    python -m src.matching_MS1_MS2 --config configs/config_matching_MS1_MS2.yaml
+    python -m pearl.matching_MS1_MS2 --config configs/config_matching_MS1_MS2.yaml
 """
 
 import os
@@ -10,29 +10,27 @@ import pandas as pd
 from sklearn.neighbors import KDTree
 from tqdm import tqdm
 
-from src.common import parse_config_arg
+from pearl.common import parse_config_arg
+from pearl.constants import K as K_NEIGHBOURS
 
-def image_projection_embedding(img_path, binary=False):
+def image_projection_embedding(img_path):
     arr = np.load(img_path)
-    if binary:
-        arr = (arr > 128).astype(int)
-
-    row_sum = arr.sum(axis=1)  # shape (H,)
-    col_sum = arr.sum(axis=0)  # shape (W,)
+    row_sum = arr.sum(axis=1)
+    col_sum = arr.sum(axis=0)
     vec = np.concatenate([row_sum, col_sum])
 
-    # Normalize so max is 1
+
     max_val = vec.max()
     if max_val > 0:
         vec = vec / max_val
     return vec
 
-def extract_embeddings(file_list, folder, binary=False):
+def extract_embeddings(file_list, folder):
     embeddings = []
     valid_names = []
     for fname in tqdm(file_list):
         try:
-            vec = image_projection_embedding(os.path.join(folder, fname), binary=binary)
+            vec = image_projection_embedding(os.path.join(folder, fname))
             embeddings.append(vec)
             valid_names.append(fname)
         except Exception as e:
@@ -41,8 +39,7 @@ def extract_embeddings(file_list, folder, binary=False):
 
 def main(cfg):
     input_dir = cfg["input_dir"]
-    binary = cfg.get("binary", False)
-    K = cfg.get("k", 30)
+    K = K_NEIGHBOURS
     output_dir = cfg.get(
         "output_dir",
         os.path.join(os.path.dirname(os.path.normpath(input_dir)), f"clusters_k{K}"),
@@ -59,8 +56,8 @@ def main(cfg):
     if not ms2_files:
         raise SystemExit(f"no MS2 label images in {input_dir}; nothing to match")
 
-    ms1_vectors, ms1_names = extract_embeddings(ms1_files, input_dir, binary=binary)
-    ms2_vectors, ms2_names = extract_embeddings(ms2_files, input_dir, binary=binary)
+    ms1_vectors, ms1_names = extract_embeddings(ms1_files, input_dir)
+    ms2_vectors, ms2_names = extract_embeddings(ms2_files, input_dir)
     print("All images embedded!")
 
     if K > len(ms1_names):
@@ -73,7 +70,7 @@ def main(cfg):
     np.save(os.path.join(output_dir, "ms2_vectors.npz"), ms2_vectors)
     np.save(os.path.join(output_dir, "ms2_names.npz"), np.array(ms2_names))
 
-    # nearest-neighbour search
+
     tree = KDTree(ms1_vectors)
     tree_path = os.path.join(output_dir, "ms1_kdtree.pkl")
     with open(tree_path, "wb") as f:

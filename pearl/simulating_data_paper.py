@@ -2,7 +2,7 @@ import numpy as np
 from scipy.special import log_ndtr
 import random
 import os
-from src.common import parse_config_arg
+from pearl.common import parse_config_arg
 
 def make_peak(rt_range_shifted, max_int, p_noise, sigma, tau):
 
@@ -30,7 +30,7 @@ def create_resolved_peak(n_max, max_bins_shift, max_intensity_range, int_sd, n_s
         if not available:
             print("No available RT bins left for new peaks!")
             break
-        
+
         prob_samples = random.uniform(prob_range[0], prob_range[1])
         random_samples = np.random.choice([0, 1], size=n_samples, p=[1-prob_samples, prob_samples])
 
@@ -92,7 +92,7 @@ def create_resolved_peak(n_max, max_bins_shift, max_intensity_range, int_sd, n_s
                     image[i, rt_idx] = intensity_peak
                     threshold = 0.15 * clean_peak.max()
                     significant = clean_peak > threshold
-                    
+
                     s_start = int(rt_peak[significant][0])
                     s_end = int(rt_peak[significant][-1]) + 1
 

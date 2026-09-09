@@ -1,5 +1,3 @@
-#   python -m src.simulating_data_paper --config configs/synthetic.yaml --section base
-
 base:
   seed: 0
   n_samples: 100

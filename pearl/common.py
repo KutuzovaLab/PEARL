@@ -3,6 +3,8 @@ import shlex
 import yaml
 import numpy as np
 
+from pearl.constants import MASS_TOL
+
 def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
@@ -31,8 +33,20 @@ PIPELINE_DEFAULTS = {
 
 def expected_eic_files(images):
     lo, hi = images["mz_range"]
-    n_bins = len(np.arange(lo, hi, images["mass_tol"]))
+    n_bins = len(np.arange(lo, hi, MASS_TOL))
     return n_bins * (1 if images.get("acquisition", "dia") == "dda" else 2)
+
+def train_exports():
+    v = PIPELINE_DEFAULTS
+    return "\n".join([
+        f"SYNTH_CFG={shlex.quote(str(v['synthetic_config']))}",
+        f"SYNTH_SEC={shlex.quote(str(v['synthetic_section']))}",
+        f"SYNTH_TASK={shlex.quote(str(v['synthetic_task']))}",
+        f"SYNTH_SRC={shlex.quote(str(load_config(v['synthetic_config'])[v['synthetic_section']]['out_dir']))}",
+        f'EPOCHS="${{EPOCHS:-{v["epochs"]}}}"',
+        f'PATCH="${{PATCH:-{v["patch"]}}}"',
+        f'BATCH="${{BATCH:-{v["batch"]}}}"',
+    ])
 
 def shell_exports(cfg):
     v = dict(PIPELINE_DEFAULTS, **{k: cfg[k] for k in PIPELINE_DEFAULTS if k in cfg})
@@ -54,9 +68,16 @@ def shell_exports(cfg):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Emit pipeline parameters as shell assignments.")
-    ap.add_argument("--config", required=True)
+    ap.add_argument("--config", default=None)
+    ap.add_argument("--train", action="store_true",
+                    help="emit only the synthetic/training variables (no dataset config)")
     ap.add_argument("--shell", action="store_true", help="required; the only supported mode")
     a = ap.parse_args()
     if not a.shell:
         raise SystemExit("pass --shell")
-    print(shell_exports(load_config(a.config)))
+    if a.train:
+        print(train_exports())
+    elif a.config:
+        print(shell_exports(load_config(a.config)))
+    else:
+        raise SystemExit("pass --config CFG or --train")

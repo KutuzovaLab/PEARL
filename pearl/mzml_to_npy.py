@@ -1,12 +1,15 @@
 import os
+import json
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 import gc
+import glob
 import time
 import numpy as np
 import pyopenms as oms
 from scipy.interpolate import CubicSpline
 
-from src.common import parse_config_arg
+from pearl.common import parse_config_arg
+from pearl.constants import MASS_TOL, LENGTH_SPLINE
 
 try:
     import numba as nb
@@ -146,6 +149,32 @@ def read_mzml_files(path, files, rt_bin_size, rt_range, mz_range, mass_tol, leng
 
     return results_ms1, results_ms2
 
+def _stamp(cfg, files):
+    img = cfg
+    return {"rt_range": list(img["rt_range"]), "rt_bin_size": img["rt_bin_size"],
+            "mz_range": list(img["mz_range"]), "mass_tol": MASS_TOL,
+            "acquisition": img.get("acquisition", "dia"),
+            "length_spline": LENGTH_SPLINE,
+            "n_files": len(files), "first": files[0], "last": files[-1]}
+
+
+def up_to_date(cfg, files, output_folder):
+    path = os.path.join(output_folder, "params.json")
+    if not os.path.exists(path):
+        return False
+    try:
+        with open(path) as f:
+            have = json.load(f)
+    except Exception:
+        return False
+    if have != _stamp(cfg, files):
+        return False
+    n = len(glob.glob(os.path.join(output_folder, "images", "*.npy")))
+    expected = int(np.arange(cfg["mz_range"][0], cfg["mz_range"][1],
+                             MASS_TOL).shape[0]) * (1 if cfg.get("acquisition", "dia") == "dda" else 2)
+    return n == expected
+
+
 def saving_results(ms1, ms2, output_folder, mz_range, mass_tol):
     os.makedirs(os.path.join(output_folder, 'images'), exist_ok=True)
     mass_bins = np.arange(mz_range[0], mz_range[1], mass_tol)
@@ -168,11 +197,15 @@ def main(cfg):
     rt_range = cfg["rt_range"]
     rt_bin_size = cfg["rt_bin_size"]
     mz_range = cfg["mz_range"]
-    mass_tol = cfg["mass_tol"]
-    length_spline = cfg.get("length_spline", 5)
+    mass_tol = MASS_TOL
+    length_spline = LENGTH_SPLINE
     acquisition = cfg.get("acquisition", "dia")
 
     final_files = selecting_files(mzml_path, cfg.get("files"))
+
+    if up_to_date(cfg, final_files, output_folder):
+        print(f"images in {output_folder} already match this config - skipping", flush=True)
+        return
 
     print(f'Reading raw files ({acquisition.upper()})...', flush=True)
     ms1, ms2 = read_mzml_files(
@@ -181,6 +214,8 @@ def main(cfg):
     )
 
     saving_results(ms1, ms2, output_folder, mz_range, mass_tol)
+    with open(os.path.join(output_folder, "params.json"), "w") as f:
+        json.dump(_stamp(cfg, final_files), f, indent=1)
 
 if __name__ == "__main__":
     config = parse_config_arg(description="Convert mzML files to MS1/MS2 .npy images.")

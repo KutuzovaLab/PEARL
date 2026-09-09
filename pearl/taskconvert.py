@@ -1,6 +1,6 @@
 """
-    python -m src.taskconvert synthetic --src results/synthetic --task Task100_synth
-    python -m src.taskconvert inference --src results/eic/images --task Task200_standNeg --prefix standNeg
+    python -m pearl.taskconvert synthetic --src results/synthetic --task Task100_synth
+    python -m pearl.taskconvert inference --src results/eic/images --task Task200_standNeg --prefix standNeg
 """
 
 import argparse
@@ -87,7 +87,7 @@ def convert_synthetic(src, task, label_version="v3", test_size=0.0, seed=42):
     generate_dataset_json(
         os.path.join(base, "dataset.json"),
         dirs["imagesTr"], dirs["imagesTs"],
-        modalities=("T1",),   # what the original task conversion used; name is cosmetic
+        modalities=("T1",),
         labels=LABELS,
         dataset_name=task,
         license="internal",
@@ -102,7 +102,7 @@ def convert_inference(src, task, prefix=None, modality="T1", limit=None):
     if not raw:
         raise SystemExit("YUCCA_RAW_DATA is not set")
     if prefix is None:
-        prefix = re.sub(r"^Task\d+_", "", task)  # strip the TaskXXX_ prefix
+        prefix = re.sub(r"^Task\d+_", "", task)
 
     base = os.path.join(raw, task)
     dirs = {d: os.path.join(base, d) for d in ["imagesTr", "labelsTr", "imagesTs", "labelsTs"]}

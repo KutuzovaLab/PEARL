@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from src import taskconvert
+from pearl import taskconvert
 
 def test_inference_writes_npy_and_marks_extension(tmp_path, monkeypatch):
     src = tmp_path / "eic"; src.mkdir()

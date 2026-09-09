@@ -29,6 +29,7 @@ env/
 *.npy
 *.png
 
+data/test/
 results/
 GITIGNORED/
 data/*
@@ -227,3 +228,6 @@ share/python-wheels/
 target/
 var/
 wheels/
+# not part of the package
+validate_run.py
+validation_workflow.ipynb

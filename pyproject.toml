@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pearl-ms"
+version = "1.0.0"
+description = "Peak Extraction And Representation Learner: LC-HRMS peak detection and MS1-MS2 association by U-Net segmentation"
+readme = "README.md"
+requires-python = "==3.11.*"
+license = { file = "LICENSE" }
+dynamic = ["dependencies"]
+
+[project.scripts]
+pearl = "pearl.run:main"
+
+[tool.setuptools]
+packages = ["pearl"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
