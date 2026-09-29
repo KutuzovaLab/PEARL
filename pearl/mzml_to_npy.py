@@ -82,13 +82,18 @@ def selecting_files(mzml_path, files=None):
     print(f"Final number of included samples: {len(found)}", flush=True)
     return found
 
+def mass_edges(mz_range, mass_tol, acquisition):
+    """Lower m/z edge of every slice; each slice is [edge, edge + mass_tol], both ends inclusive."""
+    edges = np.arange(mz_range[0], mz_range[1], mass_tol)
+    return np.round(edges, 1) if acquisition == "dda" else edges
+
 def read_mzml_files(path, files, rt_bin_size, rt_range, mz_range, mass_tol, length_spline=5,
                     acquisition="dia"):
     if acquisition not in ("dia", "dda"):
         raise ValueError(f"acquisition must be 'dia' or 'dda', got {acquisition!r}")
 
     rt_bins = np.arange(rt_range[0], rt_range[1] + rt_bin_size, rt_bin_size)
-    mass_bins = np.arange(mz_range[0], mz_range[1], mass_tol)
+    mass_bins = mass_edges(mz_range, mass_tol, acquisition)
     hi_vals = mass_bins + mass_tol
     n_bins, n_rt = mass_bins.shape[0], rt_bins.shape[0] - 1
 
@@ -116,8 +121,11 @@ def read_mzml_files(path, files, rt_bin_size, rt_range, mz_range, mass_tol, leng
         rts = np.asarray(rts, np.float64)
         nid = np.asarray(codes, np.int64)
 
-        level_ok = (nid == 1) if acquisition == "dda" else np.ones(len(rts), bool)
-        keep = np.nonzero((rts >= rt_range[0]) & (rts <= rt_range[1]) & level_ok)[0]
+        if acquisition == "dda":
+            in_rt = (rts >= rt_bins[0]) & (rts < rt_bins[-1]) & (nid == 1)
+        else:
+            in_rt = (rts >= rt_range[0]) & (rts <= rt_range[1])
+        keep = np.nonzero(in_rt)[0]
         rts, nid = rts[keep], nid[keep]
         mzs, ints = [mzs[i] for i in keep], [ints[i] for i in keep]
         rtbin = (np.searchsorted(rt_bins, rts, 'right') - 1).astype(np.int64)
@@ -154,6 +162,7 @@ def _stamp(cfg, files):
     return {"rt_range": list(img["rt_range"]), "rt_bin_size": img["rt_bin_size"],
             "mz_range": list(img["mz_range"]), "mass_tol": MASS_TOL,
             "acquisition": img.get("acquisition", "dia"),
+            "mz_edges": "rounded" if img.get("acquisition", "dia") == "dda" else "arange",
             "length_spline": LENGTH_SPLINE,
             "n_files": len(files), "first": files[0], "last": files[-1]}
 

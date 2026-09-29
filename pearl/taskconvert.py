@@ -32,7 +32,7 @@ def _task_dirs(task):
         os.makedirs(d, exist_ok=True)
     return base, dirs
 
-def convert_synthetic(src, task, label_version="v3", test_size=0.0, seed=42):
+def convert_synthetic(src, task, label_version="v3", test_size=0.2, seed=42154):
     raw = os.environ.get("YUCCA_RAW_DATA")
     if not raw:
         raise SystemExit("YUCCA_RAW_DATA is not set")
@@ -115,11 +115,19 @@ def convert_inference(src, task, prefix=None, modality="T1", limit=None):
     if not files:
         raise SystemExit(f"No .npy images found under {src}")
 
+    skipped = 0
     for p in files:
         stem = os.path.splitext(os.path.basename(p))[0]
         cid = f"{prefix}_{stem}"
         img = np.load(p).astype(np.float32)
+        if not img.any():
+            # An all-zero slice holds no signal, so it can hold no peak. It also
+            # crashes yucca: crop_to_nonzero takes np.min of an empty foreground.
+            skipped += 1
+            continue
         np.save(f"{dirs['imagesTs']}/{cid}_000.npy", img)
+    if skipped:
+        print(f"skipped {skipped} all-zero slice(s) - no signal to segment", flush=True)
 
     generate_dataset_json(
         os.path.join(base, "dataset.json"),
@@ -132,7 +140,7 @@ def convert_inference(src, task, prefix=None, modality="T1", limit=None):
         dataset_reference="PEARL",
     )
     _mark_npy(base)
-    print(f"inference task ready: {len(files)} images -> {dirs['imagesTs']}")
+    print(f"inference task ready: {len(files) - skipped} images -> {dirs['imagesTs']}")
     print(f"next: yucca_inference -t {task} -s <SOURCE_TASK> -d 2D -m UNet --no_wandb --disable_tta --no_eval")
 
 def main():
@@ -143,10 +151,11 @@ def main():
     s.add_argument("--src", required=True)
     s.add_argument("--task", required=True)
     s.add_argument("--label-version", default="v3")
-    s.add_argument("--test-size", type=float, default=0.0,
-                   help="Holdout into imagesTs. Default 0: yucca's own 5-fold over imagesTr "
-                        "provides validation, and a holdout here is never read.")
-    s.add_argument("--seed", type=int, default=42)
+    s.add_argument("--test-size", type=float, default=0.2,
+                   help="Fraction held out into imagesTs and never trained on. Default 0.2 with seed "
+                        "42154, as the original task conversions; yucca's 5-fold validation split "
+                        "then runs over the remaining imagesTr.")
+    s.add_argument("--seed", type=int, default=42154)
 
     i = sub.add_parser("inference", help="Convert EIC images into an inference task.")
     i.add_argument("--src", required=True)

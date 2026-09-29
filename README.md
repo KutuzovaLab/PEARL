@@ -61,15 +61,12 @@ the `config.yaml` PEARL generated and actually used.
 
 ## Minimal example
 
-Nothing to prepare — this downloads four public QC runs and analyses them:
-
 ```bash
 pearl --demo
 ```
 
 Four replicates from [MetaboLights MTBLS1129](https://www.ebi.ac.uk/metabolights/MTBLS1129)
-(~330 MB, checksum-verified) are fetched to `data/mzml/test`, and the whole
-pipeline finishes in a couple of minutes, writing `results/test/peaks.csv`.
+are fetched to `data/mzml/test`, and the whole pipeline is executed, writing `results/test/peaks.csv`.
 
 ## Reproducing the article
 
@@ -107,10 +104,11 @@ KEEP_MODEL=1 pearl --input /path/to/mzml --output /path/to/results
 ```
 
 `train_model.sh` generates the synthetic training set from
-`configs/synthetic.yaml`, converts it to a yucca task, preprocesses and trains.
+`configs/synthetic.yaml`, converts it to a yucca task (holding out 20% of the
+images, as the original run did), preprocesses and trains.
 The paper's model is a 2D U-Net trained for 600 epochs on 96x528 patches with
 batch size 44, DiceCE loss and SGD at lr 0.001, fold 0 of 5; the checkpoint
-with the lowest validation loss (epoch 557) is the one used for inference.
+with the lowest validation loss (epoch 556) is the one used for inference.
 Training the full synthetic set needs a GPU and substantial disk.
 
 `KEEP_MODEL=1` stops the pipeline replacing your model with the published
