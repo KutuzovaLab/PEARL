@@ -3,10 +3,6 @@ base:
   n_samples: 100
   rt_bins: 3500
   start_index: 70001
-  labels:
-  - v1
-  - v2
-  - v3
   background:
     mean: 500
     sd: 200
@@ -81,10 +77,6 @@ sparse_extra:
   n_samples: 100
   rt_bins: 3500
   start_index: 130001
-  labels:
-  - v1
-  - v2
-  - v3
   background:
     mean: 500
     sd: 200
@@ -120,10 +112,6 @@ main_equivalent:
   n_samples: 100
   rt_bins: 3500
   start_index: 70001
-  labels:
-  - v1
-  - v2
-  - v3
   background:
     mean: 500
     sd: 200

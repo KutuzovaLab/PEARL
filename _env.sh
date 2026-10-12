@@ -7,7 +7,7 @@ if [ ! -d .venv_yucca ]; then
     }
     "$BASE_PY" -m venv .venv_yucca
     .venv_yucca/bin/python -m pip install --upgrade pip
-    .venv_yucca/bin/python -m pip install -r requirements.txt
+    .venv_yucca/bin/python -m pip install -e .   # requirements.txt, plus the pearl command
     .venv_yucca/bin/python -m pearl.patch_yucca_npy
 fi
 PY=.venv_yucca/bin/python

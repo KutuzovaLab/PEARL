@@ -64,3 +64,14 @@ def test_synthetic_holds_out_20_percent(tmp_path, monkeypatch):
 
 def test_taskconvert_labels_are_three_class():
     assert taskconvert.LABELS == {0: "no signal", 1: "signal", 2: "overlap"}
+
+def test_inference_refuses_an_m_z_window_with_no_signal(tmp_path, monkeypatch):
+    import pytest
+    src = tmp_path / "eic"; src.mkdir()
+    for i in range(3):
+        np.save(src / f"MS1_100_{i}_100_{i+1}.npy", np.zeros((8, 40), dtype=np.float32))
+    raw = tmp_path / "raw"; raw.mkdir()
+    monkeypatch.setenv("YUCCA_RAW_DATA", str(raw))
+
+    with pytest.raises(SystemExit, match="no signal in this m/z range"):
+        taskconvert.convert_inference(str(src), "Task999_ut", prefix="ut")

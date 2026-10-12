@@ -1,5 +1,5 @@
 """
-    python -m pearl.extracting_labels_erosion --config configs/config_extracting_labels_erosion.yaml
+    python -m pearl.extracting_labels_erosion --config <output>/config.yaml --section labels
 """
 
 import os
@@ -71,6 +71,13 @@ def main(cfg):
         img = nib.load(os.path.join(predictions_dir, lbl_name)).get_fdata()
 
         img_raw = load_raw_image(images_raw, base_name)
+
+        if img.shape != img_raw.shape:
+            # a one-sample dataset is written back without its length-1 sample axis
+            if img.size != img_raw.size:
+                raise SystemExit(f"prediction {lbl_name} has shape {img.shape}, but its raw "
+                                 f"image is {img_raw.shape}")
+            img = img.reshape(img_raw.shape)
 
         lbl3 = label_to_rgb_pil(img)
         lbl3.save(os.path.join(output_dir, "yucca_labels", re.sub("nii.gz", "png", lbl_name)))

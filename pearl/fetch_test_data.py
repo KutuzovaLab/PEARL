@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import hashlib
 import argparse
@@ -68,7 +67,7 @@ def main(argv=None):
     os.makedirs(a.out, exist_ok=True)
 
     print(f"MetaboLights {STUDY} -> {a.out}", flush=True)
-    print(f"  fetching checksum manifest ...", flush=True)
+    print("  fetching checksum manifest ...", flush=True)
     manifest = json.loads(_get(HASHES_URL))
 
     for name in wanted:

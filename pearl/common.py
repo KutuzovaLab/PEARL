@@ -1,5 +1,7 @@
 import argparse
 import shlex
+from decimal import Decimal
+
 import yaml
 import numpy as np
 
@@ -31,9 +33,25 @@ PIPELINE_DEFAULTS = {
     "batch": 44,
 }
 
+def mass_tol_of(images):
+    return float(images.get("mass_tol", MASS_TOL))
+
+def mz_decimals(mass_tol):
+    """Decimals a slice name needs to stay unambiguous: 0.1 -> 1, 0.05 -> 2, 0.001 -> 3.
+
+    One decimal is the floor, so the published 0.1 Da slices keep the names they
+    have always had (MS1_200_0_200_1.npy).
+    """
+    exp = -Decimal(str(float(mass_tol))).as_tuple().exponent
+    return max(1, int(exp))
+
+def slice_tag(value, nd):
+    """The m/z of a slice edge as it appears in a file name: 200.0 -> '200_0'."""
+    return f"{round(value, nd):.{nd}f}".replace(".", "_")
+
 def expected_eic_files(images):
     lo, hi = images["mz_range"]
-    n_bins = len(np.arange(lo, hi, MASS_TOL))
+    n_bins = len(np.arange(lo, hi, mass_tol_of(images)))
     return n_bins * (1 if images.get("acquisition", "dia") == "dda" else 2)
 
 def train_exports():

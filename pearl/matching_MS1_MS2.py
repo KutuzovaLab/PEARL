@@ -1,5 +1,6 @@
-"""
-    python -m pearl.matching_MS1_MS2 --config configs/config_matching_MS1_MS2.yaml
+"""Cluster the MS2 peak labels onto the MS1 ones they co-elute with.
+
+    python -m pearl.matching_MS1_MS2 --config <output>/config.yaml --section matching
 """
 
 import os
@@ -51,10 +52,11 @@ def main(cfg):
     print(f"Found {len(ms1_files)} MS1 files")
     print(f"Found {len(ms2_files)} MS2 files")
 
-    if not ms1_files:
-        raise SystemExit(f"no MS1 label images in {input_dir}; nothing to match against")
-    if not ms2_files:
-        raise SystemExit(f"no MS2 label images in {input_dir}; nothing to match")
+    if not ms1_files or not ms2_files:
+        side = "MS1" if not ms1_files else "MS2"
+        print(f"WARNING: no {side} label images in {input_dir}; "
+              f"skipping the MS1-MS2 matching", flush=True)
+        return
 
     ms1_vectors, ms1_names = extract_embeddings(ms1_files, input_dir)
     ms2_vectors, ms2_names = extract_embeddings(ms2_files, input_dir)

@@ -22,16 +22,6 @@ def _mark_npy(base):
     d["image_extension"] = "npy"
     json.dump(d, open(p, "w"), indent=2)
 
-def _task_dirs(task):
-    raw = os.environ.get("YUCCA_RAW_DATA")
-    if not raw:
-        raise SystemExit("YUCCA_RAW_DATA is not set")
-    base = os.path.join(raw, task)
-    dirs = {d: os.path.join(base, d) for d in ["imagesTr", "labelsTr", "imagesTs", "labelsTs"]}
-    for d in dirs.values():
-        os.makedirs(d, exist_ok=True)
-    return base, dirs
-
 def convert_synthetic(src, task, label_version="v3", test_size=0.2, seed=42154):
     raw = os.environ.get("YUCCA_RAW_DATA")
     if not raw:
@@ -128,6 +118,9 @@ def convert_inference(src, task, prefix=None, modality="T1", limit=None):
         np.save(f"{dirs['imagesTs']}/{cid}_000.npy", img)
     if skipped:
         print(f"skipped {skipped} all-zero slice(s) - no signal to segment", flush=True)
+    if skipped == len(files):
+        raise SystemExit(f"every one of the {len(files)} slices in {src} is empty: there is no "
+                         f"signal in this m/z range to segment. Widen --mz-range.")
 
     generate_dataset_json(
         os.path.join(base, "dataset.json"),

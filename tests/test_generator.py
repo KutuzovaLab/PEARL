@@ -27,7 +27,7 @@ def test_generator_byte_identical_to_main(tmp_path):
     main_dir = tmp_path / "main"
     (main_dir / "images").mkdir(parents=True)
     for v in ("v1", "v2", "v3"):
-        (main_dir / "labels" / v).mkdir(parents=True)
+        (main_dir / "labels" / v).mkdir(parents=True)   # main still writes all three
     src = (src.replace("n_images = 10000", "n_images = 3")
               .replace("# Creating images", "random.seed(0); np.random.seed(0)\n# Creating images"))
     import re
@@ -41,6 +41,12 @@ def test_generator_byte_identical_to_main(tmp_path):
     for i in range(3):
         f = f"{70001+i:05d}.npy"
         assert np.array_equal(np.load(main_dir/"images"/f), np.load(ours/"original/images"/f)); n += 1
-        for v in ("v1", "v2", "v3"):
-            assert np.array_equal(np.load(main_dir/"labels"/v/f), np.load(ours/f"original/labels/{v}"/f)); n += 1
-    assert n == 12
+        # v1 and v2 are gone; v3 - the only version PEARL ever used - must not have moved
+        assert np.array_equal(np.load(main_dir/"labels/v3"/f),
+                              np.load(ours/"original/labels/v3"/f)); n += 1
+    assert n == 6
+
+
+def test_generator_writes_only_v3_labels(tmp_path):
+    _gen_ours(str(tmp_path))
+    assert [p.name for p in sorted((tmp_path / "original" / "labels").iterdir())] == ["v3"]
