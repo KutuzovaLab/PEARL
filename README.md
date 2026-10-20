@@ -52,30 +52,6 @@ One row per detected peak. `MS1 m/z` is the precursor mass, `RT` its retention
 time in seconds, and `MS2 spectrum` the associated fragments as
 `mz;intensity` pairs separated by spaces.
 
-### Parameters
-
-| option | default | what it does |
-|---|---|---|
-| `--mass-tol` | `0.1` | width in Da of the m/z slice each image covers. The published model was trained on 0.1 Da slices. |
-| `--ms2-ppm` | `20` | m/z tolerance when a fragment spectrum is read from the raw files. |
-| `--ms2-rt-tol` | `5` | DDA only: how far outside a peak's own RT window its fragment spectrum may lie. |
-| `--dia-channels` | detected | `function` (Waters, from the `function=N` native IDs) or `mslevel`. |
-| `--dia-functions` | `1 2 3` | DIA only: which functions hold MS1, MS2 and the lock mass. `0` for the lock mass if the run has none. |
-
-Inference runs on the CPU in float32 by default, which is the slowest but most
-portable setting. Four environment variables change that:
-
-| variable | default | what it does |
-|---|---|---|
-| `PEARL_ACCELERATOR` | `cpu` | passed to Lightning: `mps` on Apple silicon, `gpu` on CUDA. Several times faster. |
-| `PEARL_PRECISION` | `32-true` | `16-mixed` is what the model's CUDA runs used. It is faster and uses less memory, but float16 overflows on very intense peaks and loses them, so the two settings do not give the same peak list. |
-| `PEARL_WINDOW_BATCH` | `8` | sliding-window patches per forward pass. Lower it if inference runs out of memory. |
-| `PEARL_INFER_THREADS` | all cores | threads for the CPU maths libraries during inference. |
-
-```bash
-PEARL_ACCELERATOR=mps pearl --input /path/to/mzml --output /path/to/results
-```
-
 ## Minimal example
 
 ```bash
@@ -131,6 +107,10 @@ Training the full synthetic set needs a GPU and substantial disk space.
 
 `KEEP_MODEL=1` stops the pipeline replacing your model with the published
 checkpoint.
+
+## Synthetic Data
+
+The synthetic dataset can be fetched from [PEARL_synthetic_data](https://huggingface.co/datasets/UffeDalgas/PEARL_synthetic_data)
 
 ## Tests
 

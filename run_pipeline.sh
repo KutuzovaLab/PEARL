@@ -11,7 +11,7 @@ CFG="$PEARL_CONFIG"
 DATASET="$(basename "$(dirname "$CFG")")"
 source ./_env.sh
 
-CKPT="${CKPT:-hf://UffeDalgas/temporary_p/best.ckpt}"
+CKPT="${CKPT:-hf://UffeDalgas/PEARL/best.ckpt}"
 
 if [ -z "${KEEP_MODEL:-}" ]; then
     case "$CKPT" in hf://*) CKPT="$("$PY" -m pearl.fetch_checkpoint "$CKPT")" ;; esac

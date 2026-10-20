@@ -12,7 +12,7 @@ from pearl.common import expected_eic_files
 from pearl.constants import K, MASS_TOL, MS2_PPM, MS2_RT_TOL
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_CKPT = "hf://UffeDalgas/temporary_p/best.ckpt"
+DEFAULT_CKPT = "hf://UffeDalgas/PEARL/best.ckpt"
 DEMO_INPUT = "data/mzml/test"
 DEMO_OUTPUT = "results/test"
 
