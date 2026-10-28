@@ -1,12 +1,10 @@
 # PEARL
 
-PEARL (**P**eak **E**xtraction **A**nd **R**epresentation **L**earner) — manual-tuning free LC-HRMS peak detection and
-MS1/MS2 association enabled by deep learning.
+PEARL (**P**eak **E**xtraction **A**nd **R**epresentation **L**earner) — Deep Learning Based Unified Peak Detection and Precursor-Product Ion Association in LC-HRMS.
 
 PEARL turns raw LC-HRMS acquisitions (mzML) into a table of extracted peaks, each MS1 peak
-optionally linked to the MS2 spectra that best match it. Internally, each narrow m/z slice of
-the run is rendered as an image (retention time x sample), a U-Net neural network (trained via
-[Yucca](https://github.com/Sllambias/yucca)) find peak segments, which are then matched between MS1 and MS2
+linked to the their MS2 spectra. Internally, all samples are turned into fixed width EICs and rendered as an image (retention time x sample), a U-Net neural network (trained via
+[Yucca](https://github.com/Sllambias/yucca)) find peak segments, which are then matched between MS1 and MS2 mass
 channels.
 
 ## Contents
